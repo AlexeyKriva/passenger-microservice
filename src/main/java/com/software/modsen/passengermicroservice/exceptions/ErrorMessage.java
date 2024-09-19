@@ -6,4 +6,5 @@ public class ErrorMessage {
     public static final String METHOD_NOT_ALLOWED_MESSAGE = " method is not supported.";
     public static final String INVALID_TYPE_FOR_PARAMETER_MESSAGE = "Invalid value for parameter '%s'. Expected type:" +
             " %s, but got: %s.";
+    public static final String DATA_INTEGRITY_VIOLATION_MESSAGE = "This email or phone number has already been registered.";
 }

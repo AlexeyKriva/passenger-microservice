@@ -1,5 +1,6 @@
 package com.software.modsen.passengermicroservice.exceptions;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -11,6 +12,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,17 +38,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<String> httpRequestMethodNotSupportedExceptionHandler(HttpRequestMethodNotSupportedException
                                                                                         exception) {
-        return new ResponseEntity<>(exception.getMethod() + ErrorMessage.METHOD_NOT_ALLOWED_MESSAGE, HttpStatus.METHOD_NOT_ALLOWED);
+        return new ResponseEntity<>(exception.getMethod() + METHOD_NOT_ALLOWED_MESSAGE, HttpStatus.METHOD_NOT_ALLOWED);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<String> methodArgumentTypeMismatchExceptionHandler(MethodArgumentTypeMismatchException exception) {
-        return new ResponseEntity<>(String.format(ErrorMessage.INVALID_TYPE_FOR_PARAMETER_MESSAGE, exception.getName(),
+        return new ResponseEntity<>(String.format(INVALID_TYPE_FOR_PARAMETER_MESSAGE, exception.getName(),
                 exception.getRequiredType().getSimpleName(), exception.getValue()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(PassengerWasDeletedException.class)
     public ResponseEntity<String> passengerWasDeletedExceptionHandler(PassengerWasDeletedException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.GONE);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<String> dataIntegrityViolationExceptionHandler(DataIntegrityViolationException
+                                                                         exception) {
+        return new ResponseEntity<>(DATA_INTEGRITY_VIOLATION_MESSAGE, HttpStatus.CONFLICT);
     }
 }
