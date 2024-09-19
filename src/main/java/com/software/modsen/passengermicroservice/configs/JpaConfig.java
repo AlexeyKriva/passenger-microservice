@@ -16,7 +16,7 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-@EnableJpaRepositories("org.modsen.passengermicroservice.repositories")
+@EnableJpaRepositories("com.software.modsen.passengermicroservice.repositories")
 public class JpaConfig {
     @Autowired
     private DataSource dataSource;
@@ -28,7 +28,7 @@ public class JpaConfig {
                 new LocalContainerEntityManagerFactoryBean();
 
         entityManagerFactory.setDataSource(dataSource);
-        entityManagerFactory.setPackagesToScan("org.modsen.passengermicroservice.entities");
+        entityManagerFactory.setPackagesToScan("com.software.modsen.passengermicroservice.entities");
         entityManagerFactory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         entityManagerFactory.setJpaDialect(new HibernateJpaDialect());
 
