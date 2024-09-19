@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice.configs;
+package com.software.modsen.passengermicroservice.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

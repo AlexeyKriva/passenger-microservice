@@ -1,10 +1,10 @@
-package org.modsen.passengermicroservice.controllers;
+package com.software.modsen.passengermicroservice.controllers;
 
+import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.PassengerDto;
+import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
+import com.software.modsen.passengermicroservice.services.PassengerService;
 import jakarta.validation.Valid;
-import org.modsen.passengermicroservice.entities.Passenger;
-import org.modsen.passengermicroservice.entities.PassengerDto;
-import org.modsen.passengermicroservice.entities.PassengerPatchDto;
-import org.modsen.passengermicroservice.services.PassengerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

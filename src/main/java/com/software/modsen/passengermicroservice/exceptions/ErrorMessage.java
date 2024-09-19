@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice.exceptions;
+package com.software.modsen.passengermicroservice.exceptions;
 
 public class ErrorMessage {
     public static final String PASSENGER_NOT_FOUND_MESSAGE = "Passenger not found.";

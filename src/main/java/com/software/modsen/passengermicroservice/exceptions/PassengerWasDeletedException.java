@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice.exceptions;
+package com.software.modsen.passengermicroservice.exceptions;
 
 public class PassengerWasDeletedException extends RuntimeException {
     public PassengerWasDeletedException(String message) {

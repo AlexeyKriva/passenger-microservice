@@ -1,8 +1,8 @@
-package org.modsen.passengermicroservice.services;
+package com.software.modsen.passengermicroservice.services;
 
-import org.modsen.passengermicroservice.entities.Passenger;
-import org.modsen.passengermicroservice.entities.PassengerDto;
-import org.modsen.passengermicroservice.entities.PassengerPatchDto;
+import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.PassengerDto;
+import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
 
 import java.util.List;
 

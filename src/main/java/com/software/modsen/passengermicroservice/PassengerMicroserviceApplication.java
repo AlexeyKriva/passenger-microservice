@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice;
+package com.software.modsen.passengermicroservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

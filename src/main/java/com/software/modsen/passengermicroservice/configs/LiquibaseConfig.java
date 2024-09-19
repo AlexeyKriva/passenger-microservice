@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice.configs;
+package com.software.modsen.passengermicroservice.configs;
 
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Autowired;

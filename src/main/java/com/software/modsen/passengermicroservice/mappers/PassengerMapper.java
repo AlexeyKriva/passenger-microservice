@@ -1,13 +1,13 @@
-package org.modsen.passengermicroservice.mappers;
+package com.software.modsen.passengermicroservice.mappers;
 
+import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.PassengerDto;
+import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
-import org.modsen.passengermicroservice.entities.Passenger;
-import org.modsen.passengermicroservice.entities.PassengerDto;
-import org.modsen.passengermicroservice.entities.PassengerPatchDto;
 
 @Mapper
 public interface PassengerMapper {

@@ -1,4 +1,4 @@
-package org.modsen.passengermicroservice.entities;
+package com.software.modsen.passengermicroservice.entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

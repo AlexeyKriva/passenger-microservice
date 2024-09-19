@@ -1,21 +1,19 @@
-package org.modsen.passengermicroservice.services;
+package com.software.modsen.passengermicroservice.services;
 
-import org.modsen.passengermicroservice.entities.Passenger;
-import org.modsen.passengermicroservice.entities.PassengerDto;
-import org.modsen.passengermicroservice.entities.PassengerPatchDto;
-import org.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
-import org.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
-import org.modsen.passengermicroservice.mappers.PassengerMapper;
-import org.modsen.passengermicroservice.repositories.PassengerRepository;
+import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.PassengerDto;
+import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
+import com.software.modsen.passengermicroservice.exceptions.ErrorMessage;
+import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
+import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
+import com.software.modsen.passengermicroservice.mappers.PassengerMapper;
+import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static org.modsen.passengermicroservice.exceptions.ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE;
-import static org.modsen.passengermicroservice.exceptions.ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE;
 
 @Service
 public class PassengerServiceImpl implements PassengerService {
@@ -30,10 +28,10 @@ public class PassengerServiceImpl implements PassengerService {
                 return passengerFromDb.get();
             }
 
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
+            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
     public List<Passenger> getAllPassengers() {
@@ -57,10 +55,10 @@ public class PassengerServiceImpl implements PassengerService {
                 return passengerRepository.save(updatingPassenger);
             }
 
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
+            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
     public Passenger patchPassengerById(long id, PassengerPatchDto passengerPatchDto) {
@@ -73,10 +71,10 @@ public class PassengerServiceImpl implements PassengerService {
                 return passengerRepository.save(updatingPassenger);
             }
 
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
+            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
     public Passenger softDeletePassengerById(long id) {
@@ -87,6 +85,6 @@ public class PassengerServiceImpl implements PassengerService {
             return passengerRepository.save(deletingPassenger);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 }
