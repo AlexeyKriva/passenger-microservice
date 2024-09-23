@@ -20,12 +20,12 @@ import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(PassengerNotFoundException.class)
-    public ResponseEntity<String> passengerNotFoundExceptionHandle(PassengerNotFoundException exception) {
+    public ResponseEntity<String> passengerNotFoundExceptionHandler(PassengerNotFoundException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> methodArgumentNotValidExceptionHandle(
+    public ResponseEntity<Map<String, String>> methodArgumentNotValidExceptionHandler(
             MethodArgumentNotValidException exception
     ) {
         Map<String, String> errors = new HashMap<>();
@@ -61,13 +61,19 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<String> handleNoHandlerFoundException(NoHandlerFoundException exception) {
+    public ResponseEntity<String> noHandlerFoundExceptionHandler(NoHandlerFoundException exception) {
         return new ResponseEntity<>(REQUEST_RESOURCE_NOT_FOUND_MESSAGE, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> httpMessageNotReadableExceptionMessage(HttpMessageNotReadableException
+    public ResponseEntity<String> httpMessageNotReadableExceptionMessageHandler(HttpMessageNotReadableException
                                                                          exception) {
         return new ResponseEntity<>(INVALID_JSON_FORMAT, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(PassengerRatingNotFoundException.class)
+    public ResponseEntity<String> passengerRatingNotFoundExceptionHandler(PassengerRatingNotFoundException
+                                                                          exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 }
