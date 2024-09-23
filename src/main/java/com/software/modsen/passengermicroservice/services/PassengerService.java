@@ -3,10 +3,12 @@ package com.software.modsen.passengermicroservice.services;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.PassengerDto;
 import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
+import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
 import com.software.modsen.passengermicroservice.exceptions.ErrorMessage;
 import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
 import com.software.modsen.passengermicroservice.mappers.PassengerMapper;
+import com.software.modsen.passengermicroservice.observer.PassengerSubject;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 public class PassengerService {
     @Autowired
     private PassengerRepository passengerRepository;
+    @Autowired
+    private PassengerSubject passengerSubject;
     private final PassengerMapper PASSENGER_MAPPER = PassengerMapper.INSTANCE;
 
     public Passenger getPassengerById(long id) {
@@ -42,7 +46,10 @@ public class PassengerService {
 
     public Passenger savePassenger(PassengerDto passengerDto) {
         Passenger newPassenger = PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto);
-        return passengerRepository.save(newPassenger);
+        Passenger passengerFromDb = passengerRepository.save(newPassenger);
+        passengerSubject.notifyPassengerObservers(new PassengerRatingDto(passengerFromDb.getId(), 0));
+
+        return passengerFromDb;
     }
 
     public Passenger updatePassengerById(long id, PassengerDto passengerDto) {
