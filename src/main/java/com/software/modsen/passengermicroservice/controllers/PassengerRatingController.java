@@ -24,9 +24,19 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.getAllPassengerRatings());
     }
 
+    @GetMapping("/not-deleted")
+    public ResponseEntity<List<PassengerRating>> getAllPassengerRatingsAndNotDeleted() {
+        return ResponseEntity.ok(passengerRatingService.getAllPassengerRatingsAndNotDeleted());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PassengerRating> getPassengerRatingById(@PathVariable("id") long id) {
         return ResponseEntity.ok(passengerRatingService.getPassengerRatingById(id));
+    }
+
+    @GetMapping("/{passenger_id}/not-deleted")
+    public ResponseEntity<PassengerRating> getPassengerRatingByPassengerIdAndNotDeleted(@PathVariable("passenger_id") long id) {
+        return ResponseEntity.ok(passengerRatingService.getPassengerRatingByIdAndNotDeleted(id));
     }
 
     @PutMapping("/{id}")
