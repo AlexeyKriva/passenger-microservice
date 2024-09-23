@@ -19,7 +19,8 @@ public interface PassengerRatingMapper {
     PassengerRating fromPassengerRatingPutDtoToPassengerRating(PassengerRatingPutDto passengerRatingPutDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updatePassengerRatingFromPassengerRatingPatchDto(PassengerRatingPatchDto passengerRatingPatchDto);
+    void updatePassengerRatingFromPassengerRatingPatchDto(PassengerRatingPatchDto passengerRatingPatchDto,
+                                                          @MappingTarget PassengerRating passengerRating);
 
     default void updatePassengerRatingFromPassengerRatingDto(PassengerRatingDto passengerRatingDto,
                                                              @MappingTarget PassengerRating passengerRating) {
