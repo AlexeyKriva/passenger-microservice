@@ -29,4 +29,27 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="version1-9" author="postgres">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="passenger_rating"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="passenger_rating">
+            <column name="id" type="serial">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="passenger_id" type="bigint">
+                <constraints nullable="false" foreignKeyName="fk_passenger_rating_passenger" references="passenger(id)"/>
+            </column>
+            <column name="rating_value" type="decimal(1,1)" defaultValue="0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="number_of_ratings" type="bigint" defaultValue="1">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>
