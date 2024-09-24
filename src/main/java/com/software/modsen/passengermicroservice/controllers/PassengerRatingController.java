@@ -46,7 +46,7 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.putPassengerRatingById(id, passengerRatingPutDto));
     }
 
-    @PatchMapping
+    @PutMapping
     public ResponseEntity<PassengerRating> updatePassengerRating(@Valid
                                                                  @RequestBody PassengerRatingDto passengerRatingDto) {
         return ResponseEntity.ok(passengerRatingService.updatePassengerRating(passengerRatingDto));
