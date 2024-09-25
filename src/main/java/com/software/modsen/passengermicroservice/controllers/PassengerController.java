@@ -5,7 +5,7 @@ import com.software.modsen.passengermicroservice.entities.PassengerDto;
 import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,8 +13,8 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/passenger", produces = "application/json")
+@AllArgsConstructor
 public class PassengerController {
-    @Autowired
     private PassengerService passengerService;
 
     @GetMapping

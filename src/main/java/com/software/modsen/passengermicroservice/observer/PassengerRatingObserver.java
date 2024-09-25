@@ -1,6 +1,5 @@
 package com.software.modsen.passengermicroservice.observer;
 
-import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
 import com.software.modsen.passengermicroservice.mappers.PassengerRatingMapper;

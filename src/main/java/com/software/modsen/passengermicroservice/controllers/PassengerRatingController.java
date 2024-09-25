@@ -7,7 +7,6 @@ import com.software.modsen.passengermicroservice.entities.rating.PassengerRating
 import com.software.modsen.passengermicroservice.services.PassengerRatingService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

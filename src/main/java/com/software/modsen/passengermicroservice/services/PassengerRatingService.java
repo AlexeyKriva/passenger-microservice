@@ -38,6 +38,7 @@ public class PassengerRatingService {
         for (PassengerRating passengerRatingFromDb: passengerRatingsFromDb) {
             Optional<Passenger> passengerFromDb = passengerRepository
                     .findPassengerByIdAndIsDeleted(passengerRatingFromDb.getPassenger().getId(), false);
+
             if (passengerFromDb.isPresent()) {
                 passengerRatingsAndNotDeleted.add(passengerRatingFromDb);
             }
@@ -53,6 +54,7 @@ public class PassengerRatingService {
 
     public PassengerRating getPassengerRatingById(long passengerId) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
+
         if (passengerRatingFromDb.isPresent()) {
             return passengerRatingFromDb.get();
         }
@@ -63,6 +65,7 @@ public class PassengerRatingService {
     public PassengerRating getPassengerRatingByIdAndNotDeleted(long passengerId) {
         Optional<Passenger> passengerFromDb = passengerRepository
                 .findPassengerByIdAndIsDeleted(passengerId, false);
+
         if (passengerFromDb.isPresent()) {
             Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
             return passengerRatingFromDb.get();
@@ -96,12 +99,14 @@ public class PassengerRatingService {
 
     public PassengerRating putPassengerRatingById(long id, PassengerRatingPutDto passengerRatingPutDto) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+
         if (passengerRatingFromDb.isPresent()) {
             PassengerRating updatingPassengerRating = PASSENGER_RATING_MAPPER
                     .fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto);
             updatingPassengerRating.setId(id);
 
             Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingFromDb.get().getId());
+
             if (!passengerFromDb.get().isDeleted()) {
                 updatingPassengerRating.setPassenger(passengerFromDb.get());
             } else {
@@ -116,13 +121,16 @@ public class PassengerRatingService {
 
     public PassengerRating patchPassengerRatingById(long id, PassengerRatingPatchDto passengerRatingPatchDto) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+
         if (passengerRatingFromDb.isPresent()) {
             PassengerRating updatingPassengerRating = passengerRatingFromDb.get();
             PASSENGER_RATING_MAPPER.updatePassengerRatingFromPassengerRatingPatchDto(passengerRatingPatchDto,
                     updatingPassengerRating);
+
             if (passengerRatingPatchDto.getPassengerId() != null) {
                 Optional<Passenger> passengerFromDb = passengerRepository
                         .findById(passengerRatingPatchDto.getPassengerId());
+
                 if (passengerFromDb.isPresent()) {
                     if (!passengerFromDb.get().isDeleted()) {
                         updatingPassengerRating.setPassenger(passengerFromDb.get());

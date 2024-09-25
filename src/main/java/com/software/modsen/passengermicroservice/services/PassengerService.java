@@ -10,7 +10,7 @@ import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedE
 import com.software.modsen.passengermicroservice.mappers.PassengerMapper;
 import com.software.modsen.passengermicroservice.observer.PassengerSubject;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,15 +18,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class PassengerService {
-    @Autowired
     private PassengerRepository passengerRepository;
-    @Autowired
     private PassengerSubject passengerSubject;
     private final PassengerMapper PASSENGER_MAPPER = PassengerMapper.INSTANCE;
 
     public Passenger getPassengerById(long id) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+
         if (passengerFromDb.isPresent()) {
             if (!passengerFromDb.get().isDeleted()) {
                 return passengerFromDb.get();
@@ -54,6 +54,7 @@ public class PassengerService {
 
     public Passenger updatePassengerById(long id, PassengerDto passengerDto) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+
         if (passengerFromDb.isPresent()) {
             if (!passengerFromDb.get().isDeleted()) {
                 Passenger updatingPassenger = PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto);
@@ -70,6 +71,7 @@ public class PassengerService {
 
     public Passenger patchPassengerById(long id, PassengerPatchDto passengerPatchDto) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+
         if (passengerFromDb.isPresent()) {
             if (!passengerFromDb.get().isDeleted()) {
                 Passenger updatingPassenger = passengerFromDb.get();
@@ -86,6 +88,7 @@ public class PassengerService {
 
     public Passenger softDeletePassengerById(long id) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+
         return passengerFromDb.map(passenger -> {
             passenger.setDeleted(true);
             return passengerRepository.save(passenger);

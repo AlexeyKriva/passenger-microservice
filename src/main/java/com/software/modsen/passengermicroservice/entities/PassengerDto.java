@@ -18,10 +18,12 @@ public class PassengerDto {
     @Size(min = 4, max = 55, message = "The number of characters in the name" +
             " must be at least 4 and not exceed 55.")
     private String name;
+
     @JsonProperty("email")
     @Email(message = "Invalid email format.")
     @NotBlank(message = "Name cannot be blank.")
     private String email;
+
     @JsonProperty("phone_number")
     @Pattern(regexp = "^(?:\\+375|375|80)(?:25|29|33|44|17)\\d{7}$", message = "Invalid phone" +
             " number format")
