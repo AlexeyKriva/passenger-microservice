@@ -11,11 +11,20 @@ import com.software.modsen.passengermicroservice.mappers.PassengerMapper;
 import com.software.modsen.passengermicroservice.observer.PassengerSubject;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.*;
 
 @Service
 @AllArgsConstructor
@@ -44,6 +53,8 @@ public class PassengerService {
                 .collect(Collectors.toList());
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public Passenger savePassenger(PassengerDto passengerDto) {
         Passenger newPassenger = PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto);
         Passenger passengerFromDb = passengerRepository.save(newPassenger);
@@ -52,6 +63,8 @@ public class PassengerService {
         return passengerFromDb;
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public Passenger updatePassengerById(long id, PassengerDto passengerDto) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
 
@@ -69,6 +82,8 @@ public class PassengerService {
         throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public Passenger patchPassengerById(long id, PassengerPatchDto passengerPatchDto) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
 
@@ -86,6 +101,8 @@ public class PassengerService {
         throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public Passenger softDeletePassengerById(long id) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
 
@@ -93,5 +110,26 @@ public class PassengerService {
             passenger.setDeleted(true);
             return passengerRepository.save(passenger);
         }).orElseThrow(() -> new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE));
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForSaveAndPut(DataAccessException exception,
+                                                                          PassengerDto passengerDto) {
+        return new ResponseEntity<>(CANNOT_SAVE_PASSENGER_MESSAGE + passengerDto.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForPatch(DataAccessException exception,
+                                                                     PassengerPatchDto passengerPatchDto) {
+        return new ResponseEntity<>(CANNOT_PATCH_PASSENGER_MESSAGE + passengerPatchDto.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForDelete(DataAccessException exception,
+                                                                      long id) {
+        return new ResponseEntity<>(CANNOT_DELETE_PASSENGER_MESSAGE + id,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

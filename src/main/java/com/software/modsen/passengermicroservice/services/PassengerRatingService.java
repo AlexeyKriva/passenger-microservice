@@ -12,7 +12,14 @@ import com.software.modsen.passengermicroservice.mappers.PassengerRatingMapper;
 import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +81,8 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public PassengerRating updatePassengerRating(PassengerRatingDto passengerRatingDto) {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingDto.getPassengerId());
 
@@ -97,6 +106,8 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public PassengerRating putPassengerRatingById(long id, PassengerRatingPutDto passengerRatingPutDto) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
@@ -119,6 +130,8 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public PassengerRating patchPassengerRatingById(long id, PassengerRatingPatchDto passengerRatingPatchDto) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
@@ -148,6 +161,8 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
     public void deletePassengerRatingById(long id) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
@@ -155,5 +170,33 @@ public class PassengerRatingService {
                 passengerRating -> passengerRatingRepository.deleteById(id),
                 () -> {throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);}
         );
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForUpdate(DataAccessException exception,
+                                                                      PassengerRatingDto passengerRatingDto) {
+        return new ResponseEntity<>(CANNOT_UPDATE_PASSENGER_RATING_MESSAGE + passengerRatingDto.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForPut(DataAccessException exception,
+                                                                   PassengerRatingPutDto passengerRatingPutDto) {
+        return new ResponseEntity<>(CANNOT_PUT_PASSENGER_RATING_MESSAGE + passengerRatingPutDto.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForPatch(DataAccessException exception,
+                                                                     PassengerRatingPatchDto passengerRatingPatchDto) {
+        return new ResponseEntity<>(CANNOT_PATCH_PASSENGER_RATING_MESSAGE + passengerRatingPatchDto.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @Recover
+    public ResponseEntity<String> dataAccessExceptionRecoverForDelete(DataAccessException exception,
+                                                                      long id) {
+        return new ResponseEntity<>(CANNOT_DELETE_PASSENGER_RATING_MESSAGE + id,
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
