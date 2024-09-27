@@ -15,6 +15,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -81,6 +82,7 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
     }
 
+    @KafkaListener(topics = "passenger-rating", groupId = "passenger-group")
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     @Transactional
     public PassengerRating updatePassengerRating(PassengerRatingDto passengerRatingDto) {
