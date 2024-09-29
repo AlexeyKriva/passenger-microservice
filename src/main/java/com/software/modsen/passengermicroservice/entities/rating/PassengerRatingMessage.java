@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.Range;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class PassengerRatingDto {
+public class PassengerRatingMessage {
     @NotNull(message = "Passenger id cannot be null.")
     @JsonProperty("passenger_id")
     private Long passengerId;

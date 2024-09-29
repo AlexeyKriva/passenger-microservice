@@ -1,6 +1,5 @@
 package com.software.modsen.passengermicroservice.configs;
 
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
 import lombok.AllArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;

@@ -1,6 +1,6 @@
 package com.software.modsen.passengermicroservice.observer;
 
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
+import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ public class PassengerSubject {
         passengerObservers.remove(passengerObserver);
     }
 
-    public void notifyPassengerObservers(PassengerRatingDto passengerRatingDto) {
+    public void notifyPassengerObservers(PassengerRatingMessage passengerRatingDto) {
         for (PassengerObserver passengerObserver: passengerObservers) {
             passengerObserver.savePassengerRating(passengerRatingDto);
         }

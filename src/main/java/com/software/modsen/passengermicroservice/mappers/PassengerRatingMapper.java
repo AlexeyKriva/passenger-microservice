@@ -1,28 +1,24 @@
 package com.software.modsen.passengermicroservice.mappers;
 
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
+import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingMessage;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingPatchDto;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingPutDto;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
 public interface PassengerRatingMapper {
     PassengerRatingMapper INSTANCE = Mappers.getMapper(PassengerRatingMapper.class);
 
-    PassengerRating fromPassengerRatingDtoToPassengerRating(PassengerRatingDto passengerRatingDto);
+    PassengerRating fromPassengerRatingDtoToPassengerRating(PassengerRatingMessage passengerRatingDto);
 
     PassengerRating fromPassengerRatingPutDtoToPassengerRating(PassengerRatingPutDto passengerRatingPutDto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updatePassengerRatingFromPassengerRatingPatchDto(PassengerRatingPatchDto passengerRatingPatchDto,
-                                                          @MappingTarget PassengerRating passengerRating);
+    PassengerRating fromPassengerRatingPatchDtoToPassengerRating(PassengerRatingPatchDto passengerRatingPatchDto);
 
-    default void updatePassengerRatingFromPassengerRatingDto(PassengerRatingDto passengerRatingDto,
+    default void updatePassengerRatingFromPassengerRatingDto(PassengerRatingMessage passengerRatingDto,
                                                              @MappingTarget PassengerRating passengerRating) {
         Float newPassengerRating = (passengerRating.getRatingValue()
                 * Float.valueOf(passengerRating.getNumberOfRatings())
