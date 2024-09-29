@@ -51,7 +51,6 @@ public class PassengerRatingController {
                                                                   PassengerRatingPutDto passengerRatingPutDto) {
         return ResponseEntity.ok(passengerRatingService.putPassengerRatingById(
                 id,
-                passengerRatingPutDto.getPassengerId(),
                 PASSENGER_RATING_MAPPER.fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto)));
     }
 
@@ -63,11 +62,5 @@ public class PassengerRatingController {
                 id,
                 passengerRatingPatchDto.getPassengerId(),
                 PASSENGER_RATING_MAPPER.fromPassengerRatingPatchDtoToPassengerRating(passengerRatingPatchDto)));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deletePassengerRatingById(@PathVariable("id") long id) {
-        passengerRatingService.deletePassengerRatingById(id);
-        return ResponseEntity.ok("Passenger rating was successfully deleted by id " + id);
     }
 }

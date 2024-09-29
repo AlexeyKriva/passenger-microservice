@@ -120,4 +120,15 @@ public class PassengerService {
             return passengerRepository.save(passenger);
         }).orElseThrow(() -> new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE));
     }
+
+    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @Transactional
+    public Passenger softRecoveryPassengerById(long id) {
+        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+
+        return passengerFromDb.map(passenger -> {
+            passenger.setDeleted(false);
+            return passengerRepository.save(passenger);
+        }).orElseThrow(() -> new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE));
+    }
 }

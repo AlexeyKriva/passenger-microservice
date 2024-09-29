@@ -18,10 +18,12 @@ public class PassengerRatingObserver implements PassengerObserver{
     private final PassengerRatingMapper PASSENGER_RATING_MAPPER = PassengerRatingMapper.INSTANCE;
 
     @Override
-    public void savePassengerRating(PassengerRatingMessage passengerRatingDto) {
+    public void updatePassengerRating(PassengerRatingMessage passengerRatingDto) {
         PassengerRating newPassengerRating = PASSENGER_RATING_MAPPER
                 .fromPassengerRatingDtoToPassengerRating(passengerRatingDto);
+
         Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingDto.getPassengerId());
+
         newPassengerRating.setPassenger(passengerFromDb.get());
         newPassengerRating.setNumberOfRatings(0);
 

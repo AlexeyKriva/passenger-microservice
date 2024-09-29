@@ -18,7 +18,7 @@ public class PassengerSubject {
 
     public void notifyPassengerObservers(PassengerRatingMessage passengerRatingDto) {
         for (PassengerObserver passengerObserver: passengerObservers) {
-            passengerObserver.savePassengerRating(passengerRatingDto);
+            passengerObserver.updatePassengerRating(passengerRatingDto);
         }
     }
 }

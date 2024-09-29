@@ -56,6 +56,7 @@ public class PassengerRatingService {
         if (passengerRatingFromDb.isPresent()) {
             Optional<Passenger> passengerFromDb = passengerRepository.findPassengerByIdAndIsDeleted(
                     passengerRatingFromDb.get().getPassenger().getId(), false);
+
             if (passengerFromDb.isPresent()) {
                 return passengerRatingFromDb.get();
             }
@@ -70,10 +71,17 @@ public class PassengerRatingService {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
 
         if (passengerRatingFromDb.isPresent()) {
-            return passengerRatingFromDb.get();
+            Optional<Passenger> passengerFromDb = passengerRepository.findPassengerByIdAndIsDeleted(
+                    passengerRatingFromDb.get().getPassenger().getId(), false);
+
+            if (passengerFromDb.isPresent()) {
+                return passengerRatingFromDb.get();
+            }
+
+            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
     public PassengerRating getPassengerRatingByIdAndNotDeleted(long passengerId) {
@@ -90,13 +98,14 @@ public class PassengerRatingService {
 
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     @Transactional
-    public PassengerRating putPassengerRatingById(long id, Long passengerId, PassengerRating updatingPassengerRating) {
+    public PassengerRating putPassengerRatingById(long id, PassengerRating updatingPassengerRating) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
         if (passengerRatingFromDb.isPresent()) {
             updatingPassengerRating.setId(id);
 
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
+            Optional<Passenger> passengerFromDb = passengerRepository.findById(
+                    passengerRatingFromDb.get().getPassenger().getId());
 
             if (passengerFromDb.isPresent()) {
                 if (!passengerFromDb.get().isDeleted()) {
@@ -128,6 +137,7 @@ public class PassengerRatingService {
                         passengerRatingFromDb.get().getPassenger().getId());
             } else {
                 passengerFromDb = passengerRepository.findById(passengerId);
+
                 if (passengerFromDb.isEmpty()) {
                     throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
                 }

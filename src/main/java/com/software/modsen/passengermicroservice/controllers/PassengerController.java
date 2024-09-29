@@ -61,4 +61,9 @@ public class PassengerController {
     public ResponseEntity<Passenger> softDeletePassenger(@PathVariable("id") long id) {
         return ResponseEntity.ok(passengerService.softDeletePassengerById(id));
     }
+
+    @PatchMapping("/{id}/soft-recovery")
+    public ResponseEntity<Passenger> softRecoveryPassenger(@PathVariable("id") long id) {
+        return ResponseEntity.ok(passengerService.softRecoveryPassengerById(id));
+    }
 }

@@ -15,6 +15,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.*;
 
@@ -81,5 +82,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ListenerExecutionFailedException.class)
     public ResponseEntity<String> listenerExecutionFailedExceptionHandler(ListenerExecutionFailedException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 }
