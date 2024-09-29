@@ -4,6 +4,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.kafka.listener.ListenerExecutionFailedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -75,5 +76,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> passengerRatingNotFoundExceptionHandler(PassengerRatingNotFoundException
                                                                           exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ListenerExecutionFailedException.class)
+    public ResponseEntity<String> listenerExecutionFailedExceptionHandler(ListenerExecutionFailedException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

@@ -5,6 +5,18 @@ spring:
   application:
     name: passenger-microservice
 
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: passenger-ratings
+      properties:
+        string:
+          json:
+            trusted:
+              packages: com.software.modsen.passengermicroservice.entities.rating
+
 eureka:
   client:
     service-url:

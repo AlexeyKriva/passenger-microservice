@@ -45,11 +45,11 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.putPassengerRatingById(id, passengerRatingPutDto));
     }
 
-    @PutMapping
-    public ResponseEntity<PassengerRating> updatePassengerRating(@Valid
-                                                                 @RequestBody PassengerRatingDto passengerRatingDto) {
-        return ResponseEntity.ok(passengerRatingService.updatePassengerRating(passengerRatingDto));
-    }
+//    @PutMapping
+//    public ResponseEntity<PassengerRating> updatePassengerRating(@Valid
+//                                                                 @RequestBody PassengerRatingDto passengerRatingDto) {
+//        return ResponseEntity.ok(passengerRatingService.updatePassengerRating(passengerRatingDto));
+//    }
 
     @PatchMapping("/{id}")
     public ResponseEntity<PassengerRating> patchPassengerRatingById(@PathVariable("id") long id,

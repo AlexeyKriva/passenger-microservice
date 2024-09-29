@@ -82,7 +82,7 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
     }
 
-    @KafkaListener(topics = "passenger-rating", groupId = "passenger-group")
+    @KafkaListener(topics = "passenger-create-rating-topic")
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     @Transactional
     public PassengerRating updatePassengerRating(PassengerRatingDto passengerRatingDto) {
