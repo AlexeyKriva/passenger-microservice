@@ -75,6 +75,8 @@ public class PassengerAccountService {
     @Transactional
     public PassengerAccount increaseBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
+        System.out.println("Passenger from db:");
+        System.out.println(passengerAccountFromDb.get());
 
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
@@ -88,7 +90,7 @@ public class PassengerAccountService {
                         + passengerAccountFromDb.get().getBalance();
                 updatingPassengerAccount.setBalance(increasingBalance);
 
-                passengerAccountRepository.save(updatingPassengerAccount);
+                return passengerAccountRepository.save(updatingPassengerAccount);
             }
 
             throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
@@ -101,7 +103,7 @@ public class PassengerAccountService {
     @Transactional
     public PassengerAccount cancelBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
-
+        System.out.println();
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
 
@@ -109,13 +111,12 @@ public class PassengerAccountService {
 
             if (!passengerFromDb.get().isDeleted()) {
                 updatingPassengerAccount.setPassenger(passengerFromDb.get());
-
                 float increasingBalance = passengerAccountFromDb.get().getBalance()
                         - updatingPassengerAccount.getBalance();
                 if (increasingBalance >= 0) {
                     updatingPassengerAccount.setBalance(increasingBalance);
 
-                    passengerAccountRepository.save(updatingPassengerAccount);
+                    return passengerAccountRepository.save(updatingPassengerAccount);
                 } else {
                     throw new InsufficientAccountBalanceException(INSUFFICIENT_ACCOUNT_BALANCE_EXCEPTION);
                 }

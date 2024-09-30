@@ -1,7 +1,8 @@
 package com.software.modsen.passengermicroservice.controllers;
 
 import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountCancelDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountIncreaseDto;
 import com.software.modsen.passengermicroservice.mappers.PassengerAccountMapper;
 import com.software.modsen.passengermicroservice.services.PassengerAccountService;
 import jakarta.validation.Valid;
@@ -42,18 +43,18 @@ public class PassengerAccountController {
     @PutMapping("/{passenger_id}/increase")
     public ResponseEntity<PassengerAccount> increaseBalanceByPassengerId(
             @PathVariable("passenger_id") long passengerId,
-            @Valid @RequestBody PassengerAccountDto passengerAccountDto) {
+            @Valid @RequestBody PassengerAccountIncreaseDto passengerAccountIncreaseDto) {
         return ResponseEntity.ok(passengerAccountRepository.increaseBalance(
                         passengerId,
-                        PASSENGER_ACCOUNT_MAPPER.fromPassengerAccountDtoToPassengerAccount(passengerAccountDto)));
+                        PASSENGER_ACCOUNT_MAPPER.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountIncreaseDto)));
     }
 
     @PutMapping("/{passenger_id}/cancel")
     public ResponseEntity<PassengerAccount> cancelBalanceByPassengerId(
             @PathVariable("passenger_id") long passengerId,
-            @Valid @RequestBody PassengerAccountDto passengerAccountDto) {
+            @Valid @RequestBody PassengerAccountCancelDto passengerAccountCancelDto) {
         return ResponseEntity.ok(passengerAccountRepository.cancelBalance(
                         passengerId,
-                        PASSENGER_ACCOUNT_MAPPER.fromPassengerAccountDtoToPassengerAccount(passengerAccountDto)));
+                        PASSENGER_ACCOUNT_MAPPER.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountCancelDto)));
     }
 }
