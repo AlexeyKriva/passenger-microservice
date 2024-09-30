@@ -14,14 +14,7 @@ public class ErrorMessage {
             " check the URL and try again.";
     public static final String INVALID_JSON_FORMAT = "Invalid json format.";
 
-    public static final String CANNOT_SAVE_PASSENGER_MESSAGE = "Unsuccessful attempt to save passenger ";
-    public static final String CANNOT_PATCH_PASSENGER_MESSAGE = "Unsuccessful attempt to patch passenger ";
-    public static final String CANNOT_DELETE_PASSENGER_MESSAGE = "Unsuccessful attempt to delete passenger with id ";
-    public static final String CANNOT_UPDATE_PASSENGER_RATING_MESSAGE = "Unsuccessful attempt to update passenger" +
-            " rating ";
-    public static final String CANNOT_PUT_PASSENGER_RATING_MESSAGE = "Unsuccessful attempt to put passenger rating ";
-    public static final String CANNOT_PATCH_PASSENGER_RATING_MESSAGE = "Unsuccessful attempt to patch passenger " +
-            "rating ";
-    public static final String CANNOT_DELETE_PASSENGER_RATING_MESSAGE = "Unsuccessful attempt to delete passenger" +
-            "rating with id ";
+    public static final String PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE = "Passenger account not found.";
+
+    public static final String INSUFFICIENT_ACCOUNT_BALANCE_EXCEPTION = "Insufficient account balance.";
 }

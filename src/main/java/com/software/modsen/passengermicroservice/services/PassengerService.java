@@ -3,11 +3,14 @@ package com.software.modsen.passengermicroservice.services;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.PassengerDto;
 import com.software.modsen.passengermicroservice.entities.PassengerPatchDto;
+import com.software.modsen.passengermicroservice.entities.account.Currency;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingMessage;
 import com.software.modsen.passengermicroservice.exceptions.ErrorMessage;
 import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
 import com.software.modsen.passengermicroservice.observer.PassengerSubject;
+import com.software.modsen.passengermicroservice.repositories.PassengerAccountRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataAccessException;
@@ -29,6 +32,7 @@ import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.
 @AllArgsConstructor
 public class PassengerService {
     private PassengerRepository passengerRepository;
+    private PassengerAccountRepository passengerAccountRepository;
     private PassengerSubject passengerSubject;
 
     public List<Passenger> getAllPassengers() {
@@ -59,7 +63,7 @@ public class PassengerService {
     @Transactional
     public Passenger savePassenger(Passenger newPassenger) {
         Passenger passengerFromDb = passengerRepository.save(newPassenger);
-        passengerSubject.notifyPassengerObservers(new PassengerRatingMessage(passengerFromDb.getId(), 0));
+        passengerSubject.notifyPassengerObservers(passengerFromDb.getId());
 
         return passengerFromDb;
     }

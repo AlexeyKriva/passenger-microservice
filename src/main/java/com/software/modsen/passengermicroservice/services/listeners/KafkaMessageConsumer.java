@@ -31,18 +31,18 @@ public class KafkaMessageConsumer {
     @KafkaListener(topics = "passenger-create-rating-topic")
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     @Transactional
-    public PassengerRating updatePassengerRating(PassengerRatingMessage passengerRatingDto) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingDto.getPassengerId());
+    public PassengerRating updatePassengerRating(PassengerRatingMessage passengerRatingMessage) {
+        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingMessage.getPassengerId());
 
         if (passengerFromDb.isPresent()) {
             if (!passengerFromDb.get().isDeleted()) {
                 Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository
-                        .findByPassengerId(passengerRatingDto.getPassengerId());
+                        .findByPassengerId(passengerRatingMessage.getPassengerId());
 
                 if (passengerRatingFromDb.isPresent()) {
                     PassengerRating updatingPassengerRating = passengerRatingFromDb.get();
                     PASSENGER_RATING_MAPPER
-                            .updatePassengerRatingFromPassengerRatingDto(passengerRatingDto, updatingPassengerRating);
+                            .updatePassengerRatingFromPassengerRatingDto(passengerRatingMessage, updatingPassengerRating);
 
                     return passengerRatingRepository.save(updatingPassengerRating);
                 }

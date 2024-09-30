@@ -88,4 +88,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(PassengerAccountNotFoundException.class)
+    public ResponseEntity<String> passengerAccountNotFoundExceptionHandler(
+            PassengerAccountNotFoundException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InsufficientAccountBalanceException.class)
+    public ResponseEntity<String> insufficientAccountBalanceExceptionHandler(
+            InsufficientAccountBalanceException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
 }

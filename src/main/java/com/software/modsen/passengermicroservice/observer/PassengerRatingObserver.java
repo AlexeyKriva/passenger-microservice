@@ -2,12 +2,10 @@ package com.software.modsen.passengermicroservice.observer;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingMessage;
-import com.software.modsen.passengermicroservice.mappers.PassengerRatingMapper;
 import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -15,16 +13,16 @@ import java.util.Optional;
 public class PassengerRatingObserver implements PassengerObserver{
     private PassengerRepository passengerRepository;
     private PassengerRatingRepository passengerRatingRepository;
-    private final PassengerRatingMapper PASSENGER_RATING_MAPPER = PassengerRatingMapper.INSTANCE;
 
     @Override
-    public void updatePassengerRating(PassengerRatingMessage passengerRatingDto) {
-        PassengerRating newPassengerRating = PASSENGER_RATING_MAPPER
-                .fromPassengerRatingDtoToPassengerRating(passengerRatingDto);
+    @Transactional
+    public void updatePassengerInfo(long passengerId) {
+        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
 
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingDto.getPassengerId());
+        PassengerRating newPassengerRating = new PassengerRating();
 
         newPassengerRating.setPassenger(passengerFromDb.get());
+        newPassengerRating.setRatingValue(0.0f);
         newPassengerRating.setNumberOfRatings(0);
 
         passengerRatingRepository.save(newPassengerRating);
