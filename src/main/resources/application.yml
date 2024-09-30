@@ -11,11 +11,17 @@ spring:
 #      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 #      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       group-id: passenger-ratings
-      properties:
-        string:
-          json:
-            trusted:
-              packages: com.software.modsen.passengermicroservice.entities.rating
+#      properties:
+#        string:
+#          json:
+#            trusted:
+#              packages: com.software.modsen.passengermicroservice.entities.rating
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cab-aggregator-db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:98479847}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
 
 eureka:
   client:

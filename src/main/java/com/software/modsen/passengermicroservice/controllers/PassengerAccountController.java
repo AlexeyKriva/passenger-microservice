@@ -8,6 +8,7 @@ import com.software.modsen.passengermicroservice.services.PassengerAccountServic
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,6 +51,7 @@ public class PassengerAccountController {
     }
 
     @PutMapping("/{passenger_id}/cancel")
+    @Transactional
     public ResponseEntity<PassengerAccount> cancelBalanceByPassengerId(
             @PathVariable("passenger_id") long passengerId,
             @Valid @RequestBody PassengerAccountCancelDto passengerAccountCancelDto) {

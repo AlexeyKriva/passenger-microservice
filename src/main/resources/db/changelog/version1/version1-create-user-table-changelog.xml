@@ -29,7 +29,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="version1-9" author="postgres">
+    <changeSet id="version1-2" author="postgres">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="passenger_rating"/>
@@ -52,7 +52,7 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="version1-11" author="postgres">
+    <changeSet id="version1-3" author="postgres">
         <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="passenger_account"/>
