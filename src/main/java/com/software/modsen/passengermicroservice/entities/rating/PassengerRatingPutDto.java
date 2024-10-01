@@ -1,6 +1,7 @@
 package com.software.modsen.passengermicroservice.entities.rating;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import org.hibernate.validator.constraints.Range;
 @Getter
 @AllArgsConstructor
 @ToString
+@Schema(description = "Entity to update passenger balance.")
 public class PassengerRatingPutDto {
     @NotNull(message = "Passenger id cannot be null.")
     @JsonProperty("passenger_id")

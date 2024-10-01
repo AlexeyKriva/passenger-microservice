@@ -1,6 +1,7 @@
 package com.software.modsen.passengermicroservice.entities.rating;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,6 +10,7 @@ import org.hibernate.validator.constraints.Range;
 @Getter
 @AllArgsConstructor
 @ToString
+@Schema(description = "Entity to update passenger balance.")
 public class PassengerRatingPatchDto {
     @JsonProperty("passenger_id")
     private Long passengerId;

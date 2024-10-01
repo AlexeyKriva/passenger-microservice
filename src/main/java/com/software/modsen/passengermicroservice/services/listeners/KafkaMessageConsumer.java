@@ -10,14 +10,10 @@ import com.software.modsen.passengermicroservice.repositories.PassengerRatingRep
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.dao.DataAccessException;
-import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Optional;
 
@@ -30,7 +26,6 @@ public class KafkaMessageConsumer {
     private PassengerRepository passengerRepository;
     private PassengerRatingRepository passengerRatingRepository;
     private final PassengerRatingMapper PASSENGER_RATING_MAPPER = PassengerRatingMapper.INSTANCE;
-
 
     @KafkaListener(topics = "passenger-create-rating-topic", groupId = "passenger-ratings")
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
