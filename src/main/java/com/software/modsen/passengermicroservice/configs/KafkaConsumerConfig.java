@@ -1,5 +1,6 @@
 package com.software.modsen.passengermicroservice.configs;
 
+import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingMessage;
 import lombok.AllArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -25,12 +26,8 @@ public class KafkaConsumerConfig {
         Map<String, Object> kafkaConsumerProps = new HashMap<>();
         kafkaConsumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
                 environment.getProperty("spring.kafka.consumer.bootstrap-servers"));
-        kafkaConsumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class);
         kafkaConsumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 ErrorHandlingDeserializer.class);
-        kafkaConsumerProps.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS,
-                JsonDeserializer.class);
 
         kafkaConsumerProps.put(JsonDeserializer.TRUSTED_PACKAGES,
                 "*");
@@ -41,14 +38,16 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, Object> passengerRatingProducerFactory() {
-        return new DefaultKafkaConsumerFactory<>(consumerFactory());
+    public ConsumerFactory<String, PassengerRatingMessage> passengerRatingConsumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(consumerFactory(),
+                new StringDeserializer(),
+                new JsonDeserializer<>(PassengerRatingMessage.class, false));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> passengerRatingProducerFactory) {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, PassengerRatingMessage> kafkaListenerContainerFactory(
+            ConsumerFactory<String, PassengerRatingMessage> passengerRatingProducerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, PassengerRatingMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(passengerRatingProducerFactory);
 
