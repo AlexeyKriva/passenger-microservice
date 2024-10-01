@@ -1,15 +1,20 @@
 package com.software.modsen.passengermicroservice.services;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
+import com.software.modsen.passengermicroservice.exceptions.DatabaseConnectionRefusedException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerRatingNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
 import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
+import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +31,12 @@ public class PassengerRatingService {
     private PassengerRatingRepository passengerRatingRepository;
     private PassengerRepository passengerRepository;
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public List<PassengerRating> getAllPassengerRatings() {
         return passengerRatingRepository.findAll();
     }
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public List<PassengerRating> getAllNotDeletedPassengerRatings() {
         List<PassengerRating> passengerRatingsFromDb = passengerRatingRepository.findAll();
         List<PassengerRating> passengerRatingsAndNotDeleted = new ArrayList<>();
@@ -50,6 +57,7 @@ public class PassengerRatingService {
         return passengerRatingsAndNotDeleted;
     }
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public PassengerRating getPassengerRatingById(long id) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
@@ -67,6 +75,7 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public PassengerRating getPassengerRatingByPassengerId(long passengerId) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
 
@@ -84,6 +93,7 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public PassengerRating getPassengerRatingByIdAndNotDeleted(long passengerId) {
         Optional<Passenger> passengerFromDb = passengerRepository
                 .findPassengerByIdAndIsDeleted(passengerId, false);
@@ -96,7 +106,7 @@ public class PassengerRatingService {
         throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
     }
 
-    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
     @Transactional
     public PassengerRating putPassengerRatingById(long id, PassengerRating updatingPassengerRating) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
@@ -123,7 +133,7 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
     @Transactional
     public PassengerRating patchPassengerRatingById(long id, Long passengerId,
                                                     PassengerRating updatingPassengerRating) {
@@ -165,14 +175,13 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    @Transactional
-    public void deletePassengerRatingById(long id) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+    @Recover
+    public PassengerRating fallbackPostgresHandle(Throwable throwable) {
+        throw new DatabaseConnectionRefusedException(BAD_CONNECTION_TO_DATABASE_MESSAGE + CANNOT_UPDATE_DATA_MESSAGE);
+    }
 
-        passengerRatingFromDb.ifPresentOrElse(
-                passengerRating -> passengerRatingRepository.deleteById(id),
-                () -> {throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);}
-        );
+    @Recover
+    public List<PassengerRating> recoverToPSQLException(Throwable throwable) {
+        throw new DatabaseConnectionRefusedException(BAD_CONNECTION_TO_DATABASE_MESSAGE + CANNOT_GET_DATA_MESSAGE);
     }
 }

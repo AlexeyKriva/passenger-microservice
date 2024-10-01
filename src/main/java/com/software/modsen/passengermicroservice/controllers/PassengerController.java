@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.postgresql.util.PSQLException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

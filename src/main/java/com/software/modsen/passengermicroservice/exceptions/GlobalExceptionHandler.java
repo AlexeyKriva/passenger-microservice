@@ -1,5 +1,6 @@
 package com.software.modsen.passengermicroservice.exceptions;
 
+import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,5 +100,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> insufficientAccountBalanceExceptionHandler(
             InsufficientAccountBalanceException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DatabaseConnectionRefusedException.class)
+    public ResponseEntity<String> pSQLExceptionHandler(DatabaseConnectionRefusedException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
