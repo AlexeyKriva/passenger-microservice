@@ -38,11 +38,7 @@ public class PassengerService {
         Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
 
         if (passengerFromDb.isPresent()) {
-            if (!passengerFromDb.get().isDeleted()) {
-                return passengerFromDb.get();
-            }
-
-            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
+            return passengerFromDb.get();
         }
 
         throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);

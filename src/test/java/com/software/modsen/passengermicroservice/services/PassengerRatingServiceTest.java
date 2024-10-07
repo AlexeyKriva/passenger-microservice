@@ -1,10 +1,7 @@
 package com.software.modsen.passengermicroservice.services;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
-import com.software.modsen.passengermicroservice.entities.account.Currency;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
-import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerRatingNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
 import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;

@@ -40,7 +40,7 @@ public class PassengerServiceTest {
     }
 
     @Test
-    @DisplayName("Getting all passenger accounts.")
+    @DisplayName("Getting all passengers.")
     void getAllPassengersTest_ReturnPassengers() {
         //given
         List<Passenger> passengers = initPassengers();
@@ -105,23 +105,6 @@ public class PassengerServiceTest {
 
         //then
         assertEquals(PASSENGER_NOT_FOUND_MESSAGE, exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Getting deleted passenger by id.")
-    void getPassengerByIdTest_WithPassengerWasDeletedException_ReturnsException() {
-        //given
-        long passengerId = 1;
-        Optional<Passenger> passenger = Optional.of(new Passenger(passengerId, "Alex", "post@gmail.com",
-                "+37441234567", true));
-        doReturn(passenger).when(this.passengerRepository).findById(passengerId);
-
-        //when
-        PassengerWasDeletedException exception = assertThrows(PassengerWasDeletedException.class,
-                () -> passengerService.getPassengerById(passengerId));
-
-        //then
-        assertEquals(PASSENGER_WAS_DELETED_MESSAGE, exception.getMessage());
     }
 
     @Test

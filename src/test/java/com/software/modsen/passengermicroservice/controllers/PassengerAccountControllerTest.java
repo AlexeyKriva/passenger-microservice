@@ -54,7 +54,7 @@ public class PassengerAccountControllerTest {
     }
 
     @Test
-    @DisplayName("Getting all of passenger ratings.")
+    @DisplayName("Getting all of passenger accounts.")
     void getAllPassengerAccountsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerAccount> passengerAccounts = initPassengerAccounts();
@@ -70,8 +70,8 @@ public class PassengerAccountControllerTest {
     }
 
     @Test
-    @DisplayName("Getting all not deleted of passenger ratings.")
-    void getAllNotDeletedPassengerRatingsTest_ReturnsValidResponseEntity() {
+    @DisplayName("Getting all not deleted of passenger accounts.")
+    void getAllNotDeletedPassengerAccountsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerAccount> passengerAccounts = initPassengerAccounts();
         doReturn(passengerAccounts).when(this.passengerAccountService).getAllNotDeletedPassengerAccounts();
@@ -87,8 +87,8 @@ public class PassengerAccountControllerTest {
     }
 
     @Test
-    @DisplayName("Getting passenger rating by id.")
-    void getPassengerRatingByIdTest_ReturnsValidResponseEntity() {
+    @DisplayName("Getting passenger account by id.")
+    void getNotDeletedPassengerAccountsByIdTest_ReturnsValidResponseEntity() {
         //given
         int passengerAccountId = 1;
         PassengerAccount passengerAccount = new PassengerAccount(passengerAccountId,

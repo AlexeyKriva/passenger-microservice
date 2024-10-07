@@ -68,7 +68,7 @@ public class PassengerAccountServiceTest {
         List<PassengerAccount> notDeletedPassengerAccounts = List.of(passengerAccounts.get(0));
         doReturn(notDeletedPassengerAccounts).when(this.passengerAccountRepository).findAll();
         doReturn(true).when(this.passengerRepository)
-                .findPassengerByIdAndIsDeleted(notDeletedPassengerAccounts.get(0).getPassenger().getId(),
+                .existsByIdAndIsDeleted(notDeletedPassengerAccounts.get(0).getPassenger().getId(),
                         false);
 
         //when

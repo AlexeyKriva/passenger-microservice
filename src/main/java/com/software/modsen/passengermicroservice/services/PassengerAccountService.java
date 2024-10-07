@@ -93,7 +93,7 @@ public class PassengerAccountService {
     @Transactional
     public PassengerAccount cancelBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
-        System.out.println();
+
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
 

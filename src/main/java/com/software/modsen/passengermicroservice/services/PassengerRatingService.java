@@ -90,6 +90,7 @@ public class PassengerRatingService {
 
         if (passengerRatingFromDb.isPresent()) {
             updatingPassengerRating.setId(id);
+
             if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
                 updatingPassengerRating.setPassenger(passengerRatingFromDb.get().getPassenger());
             } else {
