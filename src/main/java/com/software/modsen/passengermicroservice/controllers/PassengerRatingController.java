@@ -60,15 +60,6 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.getPassengerRatingByPassengerId(id));
     }
 
-    @GetMapping("/{passenger_id}/not-deleted")
-    @Operation(
-            description = "Allows to get not deleted passenger rating by passenger id."
-    )
-    public ResponseEntity<PassengerRating> getPassengerRatingByPassengerIdAndNotDeleted(
-            @PathVariable("passenger_id") @Parameter(description = "Passenger rating id.") long id) {
-        return ResponseEntity.ok(passengerRatingService.getPassengerRatingByIdAndNotDeleted(id));
-    }
-
     @PutMapping("/{id}")
     @Operation(
             description = "Allows to update passenger rating by id."
@@ -92,7 +83,6 @@ public class PassengerRatingController {
                                                                    PassengerRatingPatchDto passengerRatingPatchDto) {
         return ResponseEntity.ok(passengerRatingService.patchPassengerRatingById(
                 id,
-                passengerRatingPatchDto.getPassengerId(),
                 PASSENGER_RATING_MAPPER.fromPassengerRatingPatchDtoToPassengerRating(passengerRatingPatchDto)));
     }
 }

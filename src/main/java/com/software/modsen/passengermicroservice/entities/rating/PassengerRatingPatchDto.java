@@ -12,9 +12,6 @@ import org.hibernate.validator.constraints.Range;
 @ToString
 @Schema(description = "Entity to update passenger balance.")
 public class PassengerRatingPatchDto {
-    @JsonProperty("passenger_id")
-    private Long passengerId;
-
     @Range(min = 0, max = 5, message = "Rating value must be between 0 and 5.")
     @JsonProperty("rating_value")
     private Float ratingValue;

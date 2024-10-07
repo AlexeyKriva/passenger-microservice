@@ -44,14 +44,7 @@ public class PassengerAccountService {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findById(id);
 
         if (passengerAccountFromDb.isPresent()) {
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(
-                    passengerAccountFromDb.get().getPassenger().getId());
-
-            if (!passengerFromDb.get().isDeleted()) {
-                return passengerAccountFromDb.get();
-            }
-
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
+            return passengerAccountFromDb.get();
         }
 
         throw new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE);
@@ -62,9 +55,7 @@ public class PassengerAccountService {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
 
         if (passengerAccountFromDb.isPresent()) {
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
-
-            if (!passengerFromDb.get().isDeleted()) {
+            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
                 return passengerAccountFromDb.get();
             }
 
@@ -82,10 +73,8 @@ public class PassengerAccountService {
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
 
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
-
-            if (!passengerFromDb.get().isDeleted()) {
-                updatingPassengerAccount.setPassenger(passengerFromDb.get());
+            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
+                updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
 
                 Float increasingBalance = updatingPassengerAccount.getBalance()
                         + passengerAccountFromDb.get().getBalance();
@@ -108,10 +97,8 @@ public class PassengerAccountService {
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
 
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
-
-            if (!passengerFromDb.get().isDeleted()) {
-                updatingPassengerAccount.setPassenger(passengerFromDb.get());
+            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
+                updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
                 float increasingBalance = passengerAccountFromDb.get().getBalance()
                         - updatingPassengerAccount.getBalance();
                 if (increasingBalance >= 0) {
