@@ -1,6 +1,6 @@
 package com.software.modsen.passengermicroservice.observer;
 
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +16,10 @@ public class PassengerSubject {
         passengerObservers.remove(passengerObserver);
     }
 
-    public void notifyPassengerObservers(PassengerRatingDto passengerRatingDto) {
+    @Transactional
+    public void notifyPassengerObservers(long passengerId) {
         for (PassengerObserver passengerObserver: passengerObservers) {
-            passengerObserver.savePassengerRating(passengerRatingDto);
+            passengerObserver.updatePassengerInfo(passengerId);
         }
     }
 }

@@ -2,13 +2,15 @@ package com.software.modsen.passengermicroservice.entities.rating;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.*;
 import org.hibernate.validator.constraints.Range;
 
 @Getter
+@Setter
 @AllArgsConstructor
-public class PassengerRatingDto {
+@NoArgsConstructor
+@ToString
+public class PassengerRatingMessage {
     @NotNull(message = "Passenger id cannot be null.")
     @JsonProperty("passenger_id")
     private Long passengerId;

@@ -9,4 +9,6 @@ import java.util.Optional;
 @Repository
 public interface PassengerRepository extends JpaRepository<Passenger, Long> {
     Optional<Passenger> findPassengerByIdAndIsDeleted(long id, boolean isDeleted);
+
+    boolean existsByIdAndIsDeleted(long id, boolean isDeleted);
 }

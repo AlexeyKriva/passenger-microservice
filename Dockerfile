@@ -11,7 +11,7 @@ RUN mvn package -DskipTests
 
 FROM openjdk:17-jdk
 
-COPY /target/passenger-microservice-0.0.1-SNAPSHOT.jar /passenger/launch-passenger.jar
+COPY /target/passenger-microservice*.jar /passenger/launch-passenger.jar
 
 ENTRYPOINT ["java","-jar","/passenger/launch-passenger.jar"]
 
