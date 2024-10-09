@@ -5,8 +5,7 @@ import com.software.modsen.passengermicroservice.entities.rating.PassengerRating
 import com.software.modsen.passengermicroservice.services.PassengerRatingService;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@Transactional
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PassengerRatingControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -58,11 +57,16 @@ public class PassengerRatingControllerIntegrationTest {
         registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
+    static boolean isAlreadySetUped = false;
+
     @BeforeEach
     void setUp() {
-        List<Passenger> passengers = defaultPassengers();
-        for (Passenger passenger: passengers) {
-            passengerService.savePassenger(passenger);
+        if (!isAlreadySetUped) {
+            List<Passenger> passengers = defaultPassengers();
+            for (Passenger passenger : passengers) {
+                passengerService.savePassenger(passenger);
+            }
+            isAlreadySetUped = true;
         }
     }
 
@@ -90,6 +94,7 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
+    @Order(1)
     @SneakyThrows
     void getAllPassengerRatingsTest_ReturnsPassengerRatings() {
         //given
@@ -112,6 +117,7 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
+    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengerRatingsTest_ReturnsValidPassengerRatings() {
         //given
@@ -134,6 +140,7 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
+    @Order(3)
     @SneakyThrows
     void getPassengerRatingByIdTest_ReturnsPassengerRating() {
         //given
@@ -154,6 +161,7 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
+    @Order(4)
     @SneakyThrows
     void getPassengerRatingByPassengerIdTest_ReturnsPassengerRating() {
         //given
@@ -181,6 +189,7 @@ public class PassengerRatingControllerIntegrationTest {
             """;
 
     @Test
+    @Order(5)
     @SneakyThrows
     void updatePassengerRatingTest_ReturnsPassengerRating() {
         //given
@@ -202,6 +211,7 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
+    @Order(6)
     @SneakyThrows
     void patchPassengerRatingByIdTest_ReturnsPassengerRating() {
         //given

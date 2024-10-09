@@ -3,10 +3,7 @@ package com.software.modsen.passengermicroservice.integration;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,7 +31,7 @@ import java.util.List;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Testcontainers
-@Transactional
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PassengerControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -57,11 +54,16 @@ public class PassengerControllerIntegrationTest {
         registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
+    static boolean isAlreadySetUped = false;
+
     @BeforeEach
     void setUp() {
-        List<Passenger> passengers = defaultPassengers();
-        for (Passenger passenger : passengers) {
-            passengerService.savePassenger(passenger);
+        if (!isAlreadySetUped) {
+            List<Passenger> passengers = defaultPassengers();
+            for (Passenger passenger : passengers) {
+                passengerService.savePassenger(passenger);
+            }
+            isAlreadySetUped = true;
         }
     }
 
@@ -84,11 +86,18 @@ public class PassengerControllerIntegrationTest {
                         .email("maksim@gmail.com")
                         .phoneNumber("+375291111111")
                         .isDeleted(true)
+                        .build(),
+                Passenger.builder()
+                        .name("Kolya")
+                        .email("kolya@gmail.com")
+                        .phoneNumber("+375292342341")
+                        .isDeleted(false)
                         .build()
         );
     }
 
     @Test
+    @Order(1)
     @SneakyThrows
     void getAllPassengersTest_ReturnsPassengers() {
         //given
@@ -111,11 +120,15 @@ public class PassengerControllerIntegrationTest {
                 () -> assertTrue(responseContent.contains("+375297777777")),
                 () -> assertTrue(responseContent.contains("Maksim")),
                 () -> assertTrue(responseContent.contains("maksim@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375291111111"))
+                () -> assertTrue(responseContent.contains("+375291111111")),
+                () -> assertTrue(responseContent.contains("Kolya")),
+                () -> assertTrue(responseContent.contains("kolya@gmail.com")),
+                () -> assertTrue(responseContent.contains("+375292342341"))
         );
     }
 
     @Test
+    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengersTest_ReturnsValidPassengers() {
         //given
@@ -137,11 +150,15 @@ public class PassengerControllerIntegrationTest {
                 () -> assertTrue(responseContent.contains("+375297777777")),
                 () -> assertFalse(responseContent.contains("Maksim")),
                 () -> assertFalse(responseContent.contains("maksim@gmail.com")),
-                () -> assertFalse(responseContent.contains("+375291111111"))
+                () -> assertFalse(responseContent.contains("+375291111111")),
+                () -> assertTrue(responseContent.contains("Kolya")),
+                () -> assertTrue(responseContent.contains("kolya@gmail.com")),
+                () -> assertTrue(responseContent.contains("+375292342341"))
         );
     }
 
     @Test
+    @Order(3)
     @SneakyThrows
     void getPassengerTest_ReturnsPassenger() {
         //given
@@ -170,6 +187,7 @@ public class PassengerControllerIntegrationTest {
             """;
 
     @Test
+    @Order(4)
     @SneakyThrows
     void savePassengerTest_ReturnsPassenger() {
         //given
@@ -184,7 +202,7 @@ public class PassengerControllerIntegrationTest {
 
         //then
         assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("4")),
+                () -> assertTrue(responseContent.contains("5")),
                 () -> assertTrue(responseContent.contains("Vova")),
                 () -> assertTrue(responseContent.contains("vova@gmail.com")),
                 () -> assertTrue(responseContent.contains("+375443377999")),
@@ -192,13 +210,22 @@ public class PassengerControllerIntegrationTest {
         );
     }
 
+    private final String passengerUpdateDto = """
+                {
+                    "name": "Andrei",
+                    "email": "andrei@gmail.com",
+                    "phone_number": "+375293344555"
+                }
+            """;
+
     @Test
+    @Order(5)
     @SneakyThrows
     void updatePassengerTest_ReturnsPassenger() {
         //given
         MvcResult mvcResult = mockMvc.perform(put("/api/passenger/2")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerDto))
+                        .content(passengerUpdateDto))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -208,48 +235,26 @@ public class PassengerControllerIntegrationTest {
         //then
         assertAll("Check response content",
                 () -> assertTrue(responseContent.contains("2")),
-                () -> assertTrue(responseContent.contains("Vova")),
-                () -> assertTrue(responseContent.contains("vova@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375443377999")),
+                () -> assertTrue(responseContent.contains("Andrei")),
+                () -> assertTrue(responseContent.contains("andrei@gmail.com")),
+                () -> assertTrue(responseContent.contains("+375293344555")),
                 () -> assertTrue(responseContent.contains("false"))
         );
     }
 
     private final String passengerPatchDto = """
                 {
-                    "name": "Vova",
-                    "email": "vova@gmail.com"
+                    "name": "Vasya",
+                    "email": "vasya@gmail.com"
                 }
             """;
 
     @Test
+    @Order(6)
     @SneakyThrows
     void patchPassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/2")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerPatchDto))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        //when
-        String responseContent = mvcResult.getResponse().getContentAsString();
-
-        //then
-        assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("2")),
-                () -> assertTrue(responseContent.contains("Vova")),
-                () -> assertTrue(responseContent.contains("vova@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375297777777")),
-                () -> assertTrue(responseContent.contains("false"))
-        );
-    }
-
-    @Test
-    @SneakyThrows
-    void softDeletePassengerTest_ReturnsPassenger() {
-        //given
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/1/soft-delete")
+        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerPatchDto))
                 .andExpect(status().isOk())
@@ -261,20 +266,43 @@ public class PassengerControllerIntegrationTest {
         //then
         assertAll("Check response content",
                 () -> assertTrue(responseContent.contains("1")),
-                () -> assertTrue(responseContent.contains("Igor")),
-                () -> assertTrue(responseContent.contains("igor@gmail.com")),
+                () -> assertTrue(responseContent.contains("Vasya")),
+                () -> assertTrue(responseContent.contains("vasya@gmail.com")),
                 () -> assertTrue(responseContent.contains("+375293333333")),
+                () -> assertTrue(responseContent.contains("false"))
+        );
+    }
+
+    @Test
+    @Order(7)
+    @SneakyThrows
+    void softDeletePassengerTest_ReturnsPassenger() {
+        //given
+        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/4/soft-delete")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //when
+        String responseContent = mvcResult.getResponse().getContentAsString();
+
+        //then
+        assertAll("Check response content",
+                () -> assertTrue(responseContent.contains("4")),
+                () -> assertTrue(responseContent.contains("Kolya")),
+                () -> assertTrue(responseContent.contains("kolya@gmail.com")),
+                () -> assertTrue(responseContent.contains("+375292342341")),
                 () -> assertTrue(responseContent.contains("true"))
         );
     }
 
     @Test
+    @Order(8)
     @SneakyThrows
     void softRecoveryPassengerTest_ReturnsPassenger() {
         //given
         MvcResult mvcResult = mockMvc.perform(post("/api/passenger/3/soft-recovery")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerPatchDto))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
 

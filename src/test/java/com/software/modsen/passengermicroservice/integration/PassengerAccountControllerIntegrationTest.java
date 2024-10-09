@@ -3,8 +3,7 @@ package com.software.modsen.passengermicroservice.integration;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@Transactional
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class PassengerAccountControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
@@ -56,11 +55,16 @@ public class PassengerAccountControllerIntegrationTest {
         registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
+    static boolean isAlreadySetUped = false;
+
     @BeforeEach
     void setUp() {
-        List<Passenger> passengers = defaultPassengers();
-        for (Passenger passenger: passengers) {
-            passengerService.savePassenger(passenger);
+        if (!isAlreadySetUped) {
+            List<Passenger> passengers = defaultPassengers();
+            for (Passenger passenger : passengers) {
+                passengerService.savePassenger(passenger);
+            }
+            isAlreadySetUped = true;
         }
     }
 
@@ -88,6 +92,7 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
+    @Order(1)
     @SneakyThrows
     void getAllPassengerAccountsTest_ReturnsPassengerAccounts() {
         //given
@@ -110,6 +115,7 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
+    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengerAccounts_ReturnsPassengerAccounts() {
         MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/not-deleted")
@@ -131,6 +137,7 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
+    @Order(3)
     @SneakyThrows
     void getNotDeletedPassengerAccountsByIdTest_ReturnsPassengerAccount() {
         //given
@@ -151,6 +158,7 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
+    @Order(4)
     @SneakyThrows
     void getNotDeletedPassengerAccountsByPassengerIdTest_ReturnsPassengerAccount (){
         //given
@@ -185,6 +193,7 @@ public class PassengerAccountControllerIntegrationTest {
             """;
 
     @Test
+    @Order(5)
     @SneakyThrows
     void increaseBalanceByPassengerIdTest_ReturnsPassengerAccount() {
         //given
@@ -206,14 +215,15 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
+    @Order(6)
     @SneakyThrows
     void cancelBalanceByPassengerIdTest_ReturnsPassengerAccount() {
         //given
-        mockMvc.perform(put("/api/passenger/account/1/increase")
+        mockMvc.perform(put("/api/passenger/account/2/increase")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passengerAccountIncreaseDto));
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/1/cancel")
+        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/2/cancel")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerAccountCancelDto))
                 .andExpect(status().isOk())
@@ -224,7 +234,7 @@ public class PassengerAccountControllerIntegrationTest {
 
         //then
         assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("Igor")),
+                () -> assertTrue(responseContent.contains("Ignat")),
                 () -> assertTrue(responseContent.contains("200.0")),
                 () -> assertTrue(responseContent.contains("BYN"))
         );
