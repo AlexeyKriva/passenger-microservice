@@ -182,7 +182,7 @@ public class PassengerRatingControllerIntegrationTest {
 
     @Test
     @SneakyThrows
-    void updatePassengerTest_ReturnsPassenger() {
+    void updatePassengerRatingTest_ReturnsPassengerRating() {
         //given
         MvcResult mvcResult = mockMvc.perform(put("/api/passenger/rating/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -203,7 +203,7 @@ public class PassengerRatingControllerIntegrationTest {
 
     @Test
     @SneakyThrows
-    void patchPassengerRatingByIdTest_ReturnsPassenger() {
+    void patchPassengerRatingByIdTest_ReturnsPassengerRating() {
         //given
         MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/rating/1")
                         .contentType(MediaType.APPLICATION_JSON)
