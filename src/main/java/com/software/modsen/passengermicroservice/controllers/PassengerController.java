@@ -86,7 +86,7 @@ public class PassengerController {
                 PASSENGER_MAPPER.fromPassengerPatchDtoToPassengerRating(passengerPatchDto)));
     }
 
-    @PatchMapping("/{id}/soft-delete")
+    @PostMapping("/{id}/soft-delete")
     @Operation(
             description = "Allows you to soft delete passenger by id."
     )
@@ -95,7 +95,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerService.softDeletePassengerById(id));
     }
 
-    @PatchMapping("/{id}/soft-recovery")
+    @PostMapping("/{id}/soft-recovery")
     @Operation(
             description = "Allows you to soft recovery passenger by id."
     )
