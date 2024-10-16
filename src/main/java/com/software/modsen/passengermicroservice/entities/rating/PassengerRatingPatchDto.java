@@ -1,20 +1,20 @@
 package com.software.modsen.passengermicroservice.entities.rating;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 import org.hibernate.validator.constraints.Range;
 
 @Getter
 @AllArgsConstructor
+@ToString
+@Schema(description = "Entity to update passenger balance.")
 public class PassengerRatingPatchDto {
-    @JsonProperty("passenger_id")
-    private Long passengerId;
-
-    @Range(min = 1, max = 5, message = "Rating value must be between 1 and 5.")
+    @Range(min = 0, max = 5, message = "Rating value must be between 0 and 5.")
     @JsonProperty("rating_value")
-    private Integer ratingValue;
+    private Float ratingValue;
 
     @JsonProperty("number_of_ratings")
     private Integer numberOfRatings;

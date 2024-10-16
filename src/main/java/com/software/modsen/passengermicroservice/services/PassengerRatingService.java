@@ -1,18 +1,23 @@
 package com.software.modsen.passengermicroservice.services;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingDto;
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingPatchDto;
-import com.software.modsen.passengermicroservice.entities.rating.PassengerRatingPutDto;
+import com.software.modsen.passengermicroservice.exceptions.DatabaseConnectionRefusedException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerRatingNotFoundException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerWasDeletedException;
-import com.software.modsen.passengermicroservice.mappers.PassengerRatingMapper;
 import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
+import org.postgresql.util.PSQLException;
+import org.springframework.dao.DataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,19 +30,21 @@ import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.
 public class PassengerRatingService {
     private PassengerRatingRepository passengerRatingRepository;
     private PassengerRepository passengerRepository;
-    private final PassengerRatingMapper PASSENGER_RATING_MAPPER = PassengerRatingMapper.INSTANCE;
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public List<PassengerRating> getAllPassengerRatings() {
         return passengerRatingRepository.findAll();
     }
 
-    public List<PassengerRating> getAllPassengerRatingsAndNotDeleted() {
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    public List<PassengerRating> getAllNotDeletedPassengerRatings() {
         List<PassengerRating> passengerRatingsFromDb = passengerRatingRepository.findAll();
         List<PassengerRating> passengerRatingsAndNotDeleted = new ArrayList<>();
 
-        for (PassengerRating passengerRatingFromDb: passengerRatingsFromDb) {
+        for (PassengerRating passengerRatingFromDb : passengerRatingsFromDb) {
             Optional<Passenger> passengerFromDb = passengerRepository
                     .findPassengerByIdAndIsDeleted(passengerRatingFromDb.getPassenger().getId(), false);
+
             if (passengerFromDb.isPresent()) {
                 passengerRatingsAndNotDeleted.add(passengerRatingFromDb);
             }
@@ -50,60 +57,42 @@ public class PassengerRatingService {
         return passengerRatingsAndNotDeleted;
     }
 
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    public PassengerRating getPassengerRatingById(long id) {
+        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
 
-    public PassengerRating getPassengerRatingById(long passengerId) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
         if (passengerRatingFromDb.isPresent()) {
             return passengerRatingFromDb.get();
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    public PassengerRating getPassengerRatingByIdAndNotDeleted(long passengerId) {
-        Optional<Passenger> passengerFromDb = passengerRepository
-                .findPassengerByIdAndIsDeleted(passengerId, false);
-        if (passengerFromDb.isPresent()) {
-            Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
-            return passengerRatingFromDb.get();
-        }
+    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
+    public PassengerRating getPassengerRatingByPassengerId(long passengerId) {
+        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
-    }
-
-    public PassengerRating updatePassengerRating(PassengerRatingDto passengerRatingDto) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingDto.getPassengerId());
-
-        if (passengerFromDb.isPresent()) {
-            if (!passengerFromDb.get().isDeleted()) {
-                Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository
-                        .findByPassengerId(passengerRatingDto.getPassengerId());
-
-                if (passengerRatingFromDb.isPresent()) {
-                    PassengerRating updatingPassengerRating = passengerRatingFromDb.get();
-                    PASSENGER_RATING_MAPPER
-                            .updatePassengerRatingFromPassengerRatingDto(passengerRatingDto, updatingPassengerRating);
-
-                    return passengerRatingRepository.save(updatingPassengerRating);
-                }
+        if (passengerRatingFromDb.isPresent()) {
+            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
+                return passengerRatingFromDb.get();
             }
 
             throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
         }
 
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+        throw new PassengerNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    public PassengerRating putPassengerRatingById(long id, PassengerRatingPutDto passengerRatingPutDto) {
+    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
+    @Transactional
+    public PassengerRating putPassengerRatingById(long id, PassengerRating updatingPassengerRating) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+
         if (passengerRatingFromDb.isPresent()) {
-            PassengerRating updatingPassengerRating = PASSENGER_RATING_MAPPER
-                    .fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto);
             updatingPassengerRating.setId(id);
 
-            Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingFromDb.get().getId());
-            if (!passengerFromDb.get().isDeleted()) {
-                updatingPassengerRating.setPassenger(passengerFromDb.get());
+            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
+                updatingPassengerRating.setPassenger(passengerRatingFromDb.get().getPassenger());
             } else {
                 throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
             }
@@ -114,25 +103,28 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    public PassengerRating patchPassengerRatingById(long id, PassengerRatingPatchDto passengerRatingPatchDto) {
+    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
+    @Transactional
+    public PassengerRating patchPassengerRatingById(long id,
+                                                    PassengerRating updatingPassengerRating) {
         Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+
         if (passengerRatingFromDb.isPresent()) {
-            PassengerRating updatingPassengerRating = passengerRatingFromDb.get();
-            PASSENGER_RATING_MAPPER.updatePassengerRatingFromPassengerRatingPatchDto(passengerRatingPatchDto,
-                    updatingPassengerRating);
-            if (passengerRatingPatchDto.getPassengerId() != null) {
-                Optional<Passenger> passengerFromDb = passengerRepository
-                        .findById(passengerRatingPatchDto.getPassengerId());
-                if (passengerFromDb.isPresent()) {
-                    if (!passengerFromDb.get().isDeleted()) {
-                        updatingPassengerRating.setPassenger(passengerFromDb.get());
-                    } else {
-                        throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-                    }
-                } else {
-                    throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
-                }
+            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
+                updatingPassengerRating.setPassenger(passengerRatingFromDb.get().getPassenger());
+            } else {
+                throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
             }
+
+            if (updatingPassengerRating.getRatingValue() == null) {
+                updatingPassengerRating.setRatingValue(passengerRatingFromDb.get().getRatingValue());
+            }
+
+            if (updatingPassengerRating.getNumberOfRatings() == null) {
+                updatingPassengerRating.setNumberOfRatings(passengerRatingFromDb.get().getNumberOfRatings());
+            }
+
+            updatingPassengerRating.setId(id);
 
             return passengerRatingRepository.save(updatingPassengerRating);
         }
@@ -140,12 +132,13 @@ public class PassengerRatingService {
         throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
     }
 
-    public void deletePassengerRatingById(long id) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+    @Recover
+    public PassengerRating fallbackPostgresHandle(Throwable throwable) {
+        throw new DatabaseConnectionRefusedException(BAD_CONNECTION_TO_DATABASE_MESSAGE + CANNOT_UPDATE_DATA_MESSAGE);
+    }
 
-        passengerRatingFromDb.ifPresentOrElse(
-                passengerRating -> passengerRatingRepository.deleteById(id),
-                () -> {throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);}
-        );
+    @Recover
+    public List<PassengerRating> recoverToPSQLException(Throwable throwable) {
+        throw new DatabaseConnectionRefusedException(BAD_CONNECTION_TO_DATABASE_MESSAGE + CANNOT_GET_DATA_MESSAGE);
     }
 }
