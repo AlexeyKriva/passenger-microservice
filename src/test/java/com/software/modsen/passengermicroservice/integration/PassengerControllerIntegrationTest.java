@@ -173,7 +173,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
                 {
                     "name": "Vova",
                     "email": "vova@gmail.com",
-                    "phone_number": "+375443377999"
+                    "phoneNumber": "+375443377999"
                 }
             """;
 
@@ -202,7 +202,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
                 {
                     "name": "Andrei",
                     "email": "andrei@gmail.com",
-                    "phone_number": "+375293344555"
+                    "phoneNumber": "+375293344555"
                 }
             """;
 

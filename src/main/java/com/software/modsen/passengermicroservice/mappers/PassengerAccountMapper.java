@@ -1,8 +1,8 @@
 package com.software.modsen.passengermicroservice.mappers;
 
 import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountCancelDto;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountIncreaseDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceDownDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceUpDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -11,9 +11,9 @@ public interface PassengerAccountMapper {
     PassengerAccountMapper INSTANCE = Mappers.getMapper(PassengerAccountMapper.class);
 
     PassengerAccount fromPassengerAccountIncreaseDtoToPassengerAccount(
-            PassengerAccountIncreaseDto passengerAccountIncreaseDto);
+            PassengerAccountBalanceUpDto passengerAccountBalanceUpDto);
 
     PassengerAccount fromPassengerAccountCancelDtoToPassengerAccount(
-            PassengerAccountCancelDto passengerAccountCancelDto);
+            PassengerAccountBalanceDownDto passengerAccountBalanceDownDto);
 
 }

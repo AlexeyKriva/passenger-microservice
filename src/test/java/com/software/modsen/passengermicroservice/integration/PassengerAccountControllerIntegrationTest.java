@@ -11,18 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
@@ -181,14 +173,14 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         );
     }
 
-    private final String passengerAccountIncreaseDto = """
+    private final String passengerAccountUpDto = """
             {
                 "balance": 1000.0,
                 "currency": "BYN"
             }
             """;
 
-    private final String passengerAccountCancelDto = """
+    private final String passengerAccountDownDto = """
             {
                 "balance": 800.0,
                 "currency": "BYN"
@@ -205,7 +197,7 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
                         "/increase")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerAccountIncreaseDto))
+                        .content(passengerAccountUpDto))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -230,12 +222,12 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
                 "/increase")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(passengerAccountIncreaseDto));
+                .content(passengerAccountUpDto));
 
         MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
                         "/cancel")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerAccountCancelDto))
+                        .content(passengerAccountDownDto))
                 .andExpect(status().isOk())
                 .andReturn();
 

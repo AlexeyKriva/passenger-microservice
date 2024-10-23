@@ -186,8 +186,8 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
 
     private final String passengerRatingDto = """
                 {
-                    "rating_value": 5,
-                    "number_of_ratings": 100
+                    "ratingValue": 5,
+                    "numberOfRatings": 100
                 }
             """;
 

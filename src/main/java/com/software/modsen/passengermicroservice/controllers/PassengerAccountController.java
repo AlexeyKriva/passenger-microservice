@@ -1,8 +1,8 @@
 package com.software.modsen.passengermicroservice.controllers;
 
 import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountCancelDto;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountIncreaseDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceDownDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceUpDto;
 import com.software.modsen.passengermicroservice.mappers.PassengerAccountMapper;
 import com.software.modsen.passengermicroservice.services.PassengerAccountService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -73,11 +73,11 @@ public class PassengerAccountController {
             @Valid
             @RequestBody
             @Parameter(description = "Entity to increase passenger balance.")
-            PassengerAccountIncreaseDto passengerAccountIncreaseDto) {
+            PassengerAccountBalanceUpDto passengerAccountBalanceUpDto) {
         return ResponseEntity.ok(passengerAccountRepository.increaseBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
-                                .fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountIncreaseDto)));
+                                .fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto)));
     }
 
     @PutMapping("/{passenger_id}/cancel")
@@ -88,10 +88,10 @@ public class PassengerAccountController {
     public ResponseEntity<PassengerAccount> cancelBalanceByPassengerId(
             @PathVariable("passenger_id") @Parameter(description = "Passenger id.") long passengerId,
             @Valid @RequestBody @Parameter(description = "Entity to cancel passenger balance.")
-            PassengerAccountCancelDto passengerAccountCancelDto) {
+            PassengerAccountBalanceDownDto passengerAccountBalanceDownDto) {
         return ResponseEntity.ok(passengerAccountRepository.cancelBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
-                                .fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountCancelDto)));
+                                .fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto)));
     }
 }
