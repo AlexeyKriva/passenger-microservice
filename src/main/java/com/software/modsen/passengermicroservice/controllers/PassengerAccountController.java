@@ -75,7 +75,6 @@ public class PassengerAccountController {
     }
 
     @PutMapping("/{passenger_id}/accounts/down")
-    @Transactional
     @Operation(
             description = "Allows to cancel passenger balance by passenger id."
     )
