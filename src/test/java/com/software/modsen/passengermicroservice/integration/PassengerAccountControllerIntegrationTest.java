@@ -81,7 +81,7 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -108,7 +108,7 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/not-deleted")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -133,7 +133,7 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         Passenger passenger = defaultPassengers().get(0);
         passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -156,8 +156,8 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         Passenger passenger = defaultPassengers().get(1);
         passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/" + passenger.getId()
-                        + "/by-passenger")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId()
+                        + "/accounts")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -194,8 +194,8 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         Passenger passenger = defaultPassengers().get(0);
         passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
-                        "/increase")
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                        "/accounts/up")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerAccountUpDto))
                 .andExpect(status().isOk())
@@ -219,13 +219,13 @@ public class PassengerAccountControllerIntegrationTest extends TestconteinersCon
         Passenger passenger = defaultPassengers().get(1);
         passengerService.savePassenger(passenger);
 
-        mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
-                "/increase")
+        mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                "/accounts/up")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passengerAccountUpDto));
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/" + passenger.getId() +
-                        "/cancel")
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                        "/accounts/down")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerAccountDownDto))
                 .andExpect(status().isOk())

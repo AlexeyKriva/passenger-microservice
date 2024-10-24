@@ -56,10 +56,11 @@ public class PassengerRatingControllerTest {
     void getAllPassengerRatingsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerRating> passengerRatings = initPassengerRatings();
-        doReturn(passengerRatings).when(this.passengerRatingService).getAllPassengerRatings();
+        doReturn(passengerRatings).when(this.passengerRatingService).getAllPassengerRatings(true);
 
         //when
-        ResponseEntity<List<PassengerRating>> responseEntity = passengerRatingController.getAllPassengerRatings();
+        ResponseEntity<List<PassengerRating>> responseEntity = passengerRatingController
+                .getAllPassengerRatings(true);
 
         //then
         assertNotNull(responseEntity);
@@ -72,11 +73,11 @@ public class PassengerRatingControllerTest {
     void getAllNotDeletedPassengerRatingsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerRating> passengerRatings = initPassengerRatings();
-        doReturn(passengerRatings).when(this.passengerRatingService).getAllNotDeletedPassengerRatings();
+        doReturn(passengerRatings).when(this.passengerRatingService).getAllPassengerRatings(false);
 
         //when
-        ResponseEntity<List<PassengerRating>> responseEntity =
-                passengerRatingController.getAllNotDeletedPassengerRatings();
+        ResponseEntity<List<PassengerRating>> responseEntity = passengerRatingController
+                .getAllPassengerRatings(false);
 
         //then
         assertNotNull(responseEntity);

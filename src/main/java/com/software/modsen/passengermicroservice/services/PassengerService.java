@@ -29,8 +29,14 @@ public class PassengerService {
     private PassengerSubject passengerSubject;
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<Passenger> getAllPassengers() {
-        return passengerRepository.findAll();
+    public List<Passenger> getAllPassengers(boolean includeDeleted) {
+        if (includeDeleted) {
+            return passengerRepository.findAll();
+        } else {
+            return passengerRepository.findAll().stream()
+                    .filter(passenger -> !passenger.isDeleted())
+                    .collect(Collectors.toList());
+        }
     }
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
@@ -42,13 +48,6 @@ public class PassengerService {
         }
 
         throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
-    }
-
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<Passenger> getNotDeletedAllPassengers() {
-        return passengerRepository.findAll().stream()
-                .filter(passenger -> !passenger.isDeleted())
-                .collect(Collectors.toList());
     }
 
     @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")

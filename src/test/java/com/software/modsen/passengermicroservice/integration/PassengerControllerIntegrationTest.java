@@ -86,7 +86,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -121,7 +121,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/not-deleted")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -153,7 +153,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
         Passenger passenger = defaultPassengers().get(0);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -181,7 +181,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
     @SneakyThrows
     void savePassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger")
+        MvcResult mvcResult = mockMvc.perform(post("/api/passengers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerDto))
                 .andExpect(status().isOk())
@@ -213,7 +213,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
         Passenger passenger = defaultPassengers().get(1);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerUpdateDto))
                 .andExpect(status().isOk())
@@ -244,7 +244,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
         Passenger passenger = defaultPassengers().get(3);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(patch("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerPatchDto))
                 .andExpect(status().isOk())
@@ -268,7 +268,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
         Passenger passenger = defaultPassengers().get(3);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/" + passenger.getId() + "/soft-delete")
+        MvcResult mvcResult = mockMvc.perform(delete("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -293,7 +293,7 @@ public class PassengerControllerIntegrationTest extends TestconteinersConfig {
         Passenger passenger = defaultPassengers().get(2);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/" + passenger.getId() + "/soft-recovery")
+        MvcResult mvcResult = mockMvc.perform(post("/api/passengers/" + passenger.getId() + "/restore")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();

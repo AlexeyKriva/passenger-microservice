@@ -91,7 +91,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -118,7 +118,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
             passengerService.savePassenger(passenger);
         }
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/not-deleted")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -144,7 +144,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
         passenger = passengerService.savePassenger(passenger);
         PassengerRating passengerRating = passengerRatingRepository.findByPassengerId(passenger.getId()).get();
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/" + passengerRating.getId())
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings/" + passengerRating.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -167,8 +167,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
         Passenger passenger = defaultPassengers().get(1);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/" + passenger.getId() +
-                        "/by-passenger")
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId() +"/ratings")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -198,7 +197,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
         Passenger passenger = defaultPassengers().get(0);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/rating/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/ratings/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerRatingDto))
                 .andExpect(status().isOk())
@@ -222,7 +221,7 @@ public class PassengerRatingControllerIntegrationTest extends TestconteinersConf
         Passenger passenger = defaultPassengers().get(0);
         passenger = passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/rating/" + passenger.getId())
+        MvcResult mvcResult = mockMvc.perform(patch("/api/passengers/ratings/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerRatingDto))
                 .andExpect(status().isOk())

@@ -17,30 +17,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/passenger/account", produces = "application/json")
+@RequestMapping(value = "/api/passengers", produces = "application/json")
 @AllArgsConstructor
 @Tag(name = "Passenger account controller", description = "Allows to interact with passenger accounts.")
 public class PassengerAccountController {
-    private PassengerAccountService passengerAccountRepository;
+    private PassengerAccountService passengerAccountService;
     private final PassengerAccountMapper PASSENGER_ACCOUNT_MAPPER = PassengerAccountMapper.INSTANCE;
 
-    @GetMapping
+    @GetMapping("/accounts")
     @Operation(
             description = "Allows to get all passenger accounts."
     )
-    public ResponseEntity<List<PassengerAccount>> getAllPassengerAccounts() {
-        return ResponseEntity.ok(passengerAccountRepository.getAllPassengerAccounts());
+    public ResponseEntity<List<PassengerAccount>> getAllPassengerAccounts(@RequestParam(name = "includeDeleted",
+            required = false, defaultValue = "true")
+                                                                              boolean includeDeleted) {
+        return ResponseEntity.ok(passengerAccountService.getAllPassengerAccounts(includeDeleted));
     }
 
-    @GetMapping("/not-deleted")
-    @Operation(
-            description = "Allows to get all not deleted passenger accounts."
-    )
-    public ResponseEntity<List<PassengerAccount>> getAllNotDeletedPassengerAccounts() {
-        return ResponseEntity.ok(passengerAccountRepository.getAllNotDeletedPassengerAccounts());
-    }
-
-    @GetMapping("/{id}")
+    @GetMapping("/accounts/{id}")
     @Operation(
             description = "Allows to get not deleted passenger account by account id."
     )
@@ -48,10 +42,10 @@ public class PassengerAccountController {
             @PathVariable("id")
             @Parameter(description = "Passenger account id.")
             long id) {
-        return ResponseEntity.ok(passengerAccountRepository.getPassengerAccountById(id));
+        return ResponseEntity.ok(passengerAccountService.getPassengerAccountById(id));
     }
 
-    @GetMapping("/{passenger_id}/by-passenger")
+    @GetMapping("/{passenger_id}/accounts")
     @Operation(
             description = "Allows to get not deleted passenger account by account passenger id."
     )
@@ -59,10 +53,10 @@ public class PassengerAccountController {
             @PathVariable("passenger_id")
             @Parameter(description = "Passenger id.")
             long passengerId) {
-        return ResponseEntity.ok(passengerAccountRepository.getPassengerAccountByPassengerId(passengerId));
+        return ResponseEntity.ok(passengerAccountService.getPassengerAccountByPassengerId(passengerId));
     }
 
-    @PutMapping("/{passenger_id}/increase")
+    @PutMapping("/{passenger_id}/accounts/up")
     @Operation(
             description = "Allows to increase passenger balance by passenger id."
     )
@@ -74,13 +68,13 @@ public class PassengerAccountController {
             @RequestBody
             @Parameter(description = "Entity to increase passenger balance.")
             PassengerAccountBalanceUpDto passengerAccountBalanceUpDto) {
-        return ResponseEntity.ok(passengerAccountRepository.increaseBalance(
+        return ResponseEntity.ok(passengerAccountService.increaseBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
                                 .fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto)));
     }
 
-    @PutMapping("/{passenger_id}/cancel")
+    @PutMapping("/{passenger_id}/accounts/down")
     @Transactional
     @Operation(
             description = "Allows to cancel passenger balance by passenger id."
@@ -89,7 +83,7 @@ public class PassengerAccountController {
             @PathVariable("passenger_id") @Parameter(description = "Passenger id.") long passengerId,
             @Valid @RequestBody @Parameter(description = "Entity to cancel passenger balance.")
             PassengerAccountBalanceDownDto passengerAccountBalanceDownDto) {
-        return ResponseEntity.ok(passengerAccountRepository.cancelBalance(
+        return ResponseEntity.ok(passengerAccountService.cancelBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
                                 .fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto)));
