@@ -22,7 +22,7 @@ public interface PassengerRatingMapper {
                                                              @MappingTarget PassengerRating passengerRating) {
         Float newPassengerRating = (passengerRating.getRatingValue()
                 * Float.valueOf(passengerRating.getNumberOfRatings())
-                + Float.valueOf(passengerRatingDto.ratingValue()))
+                + Float.valueOf(passengerRatingDto.getRatingValue()))
                 / (float) (passengerRating.getNumberOfRatings() + 1);
         passengerRating.setRatingValue(newPassengerRating);
         passengerRating.setNumberOfRatings(passengerRating.getNumberOfRatings() + 1);

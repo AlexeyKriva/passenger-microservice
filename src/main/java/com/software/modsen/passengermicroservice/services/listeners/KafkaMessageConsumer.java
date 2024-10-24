@@ -30,12 +30,12 @@ public class KafkaMessageConsumer {
     @KafkaListener(topics = "passenger-create-rating-topic", groupId = "passenger-ratings")
     @Retryable(retryFor = {DataAccessException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
     public PassengerRating updatePassengerRating(PassengerRatingMessage passengerRatingMessage) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingMessage.passengerId());
+        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerRatingMessage.getPassengerId());
 
         if (passengerFromDb.isPresent()) {
             if (!passengerFromDb.get().isDeleted()) {
                 Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository
-                        .findByPassengerId(passengerRatingMessage.passengerId());
+                        .findByPassengerId(passengerRatingMessage.getPassengerId());
 
                 if (passengerRatingFromDb.isPresent()) {
                     PassengerRating updatingPassengerRating = passengerRatingFromDb.get();
