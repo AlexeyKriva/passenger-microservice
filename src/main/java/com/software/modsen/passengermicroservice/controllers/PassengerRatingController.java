@@ -16,30 +16,24 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/passenger/rating", produces = "application/json")
+@RequestMapping(value = "/api/passengers", produces = "application/json")
 @AllArgsConstructor
 @Tag(name = "Passenger rating controller", description = "Allows to interact with passenger ratings.")
 public class PassengerRatingController {
     private PassengerRatingService passengerRatingService;
     private final PassengerRatingMapper PASSENGER_RATING_MAPPER = PassengerRatingMapper.INSTANCE;
 
-    @GetMapping
+    @GetMapping("/ratings")
     @Operation(
             description = "Allows to get all passenger ratings."
     )
-    public ResponseEntity<List<PassengerRating>> getAllPassengerRatings() {
-        return ResponseEntity.ok(passengerRatingService.getAllPassengerRatings());
+    public ResponseEntity<List<PassengerRating>> getAllPassengerRatings(@RequestParam(name = "includeDeleted",
+            required = false, defaultValue = "true")
+                                                                            boolean includeDeleted) {
+        return ResponseEntity.ok(passengerRatingService.getAllPassengerRatings(includeDeleted));
     }
 
-    @GetMapping("/not-deleted")
-    @Operation(
-            description = "Allows to get all not deleted passenger ratings."
-    )
-    public ResponseEntity<List<PassengerRating>> getAllNotDeletedPassengerRatings() {
-        return ResponseEntity.ok(passengerRatingService.getAllNotDeletedPassengerRatings());
-    }
-
-    @GetMapping("/{id}")
+    @GetMapping("/ratings/{id}")
     @Operation(
             description = "Allows to get passenger rating by id."
     )
@@ -50,7 +44,7 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.getPassengerRatingById(id));
     }
 
-    @GetMapping("/{passenger_id}/by-passenger")
+    @GetMapping("/{passenger_id}/ratings")
     @Operation(
             description = "Allows to get passenger rating by passenger id."
     )
@@ -60,7 +54,7 @@ public class PassengerRatingController {
         return ResponseEntity.ok(passengerRatingService.getPassengerRatingByPassengerId(id));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/ratings/{id}")
     @Operation(
             description = "Allows to update passenger rating by id."
     )
@@ -73,7 +67,7 @@ public class PassengerRatingController {
                 PASSENGER_RATING_MAPPER.fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto)));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/ratings/{id}")
     @Operation(
             description = "Allows to update passenger rating by id."
     )

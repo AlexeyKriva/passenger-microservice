@@ -47,7 +47,7 @@ public class PassengerServiceTest {
         doReturn(passengers).when(passengerRepository).findAll();
 
         //when
-        List<Passenger> passengersFromDb = passengerService.getAllPassengers();
+        List<Passenger> passengersFromDb = passengerService.getAllPassengers(true);
 
         //then
         assertNotNull(passengersFromDb);
@@ -58,16 +58,15 @@ public class PassengerServiceTest {
     @DisplayName("Getting all not deleted passengers.")
     void getNotDeletedAllPassengersTest_ReturnsValidPassengers() {
         //given
-        List<Passenger> passengers = initPassengers();
-        List<Passenger> notDeletedPassenger = List.of(passengers.get(0));
-        doReturn(notDeletedPassenger).when(passengerRepository).findAll();
+        List<Passenger> passengers = List.of(initPassengers().get(0));
+        doReturn(passengers).when(passengerRepository).findAll();
 
         //when
-        List<Passenger> passengersFromDb = passengerService.getNotDeletedAllPassengers();
+        List<Passenger> passengersFromDb = passengerService.getAllPassengers(false);
 
         //then
         assertNotNull(passengersFromDb);
-        assertEquals(notDeletedPassenger, passengersFromDb);
+        assertEquals(passengers, passengersFromDb);
     }
 
     @Test

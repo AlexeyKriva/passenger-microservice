@@ -32,29 +32,28 @@ public class PassengerRatingService {
     private PassengerRepository passengerRepository;
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerRating> getAllPassengerRatings() {
-        return passengerRatingRepository.findAll();
-    }
+    public List<PassengerRating> getAllPassengerRatings(boolean includeDeleted) {
+        if (includeDeleted) {
+            return passengerRatingRepository.findAll();
+        } else {
+            List<PassengerRating> passengerRatingsFromDb = passengerRatingRepository.findAll();
+            List<PassengerRating> passengerRatingsAndNotDeleted = new ArrayList<>();
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerRating> getAllNotDeletedPassengerRatings() {
-        List<PassengerRating> passengerRatingsFromDb = passengerRatingRepository.findAll();
-        List<PassengerRating> passengerRatingsAndNotDeleted = new ArrayList<>();
+            for (PassengerRating passengerRatingFromDb : passengerRatingsFromDb) {
+                Optional<Passenger> passengerFromDb = passengerRepository
+                        .findPassengerByIdAndIsDeleted(passengerRatingFromDb.getPassenger().getId(), false);
 
-        for (PassengerRating passengerRatingFromDb : passengerRatingsFromDb) {
-            Optional<Passenger> passengerFromDb = passengerRepository
-                    .findPassengerByIdAndIsDeleted(passengerRatingFromDb.getPassenger().getId(), false);
-
-            if (passengerFromDb.isPresent()) {
-                passengerRatingsAndNotDeleted.add(passengerRatingFromDb);
+                if (passengerFromDb.isPresent()) {
+                    passengerRatingsAndNotDeleted.add(passengerRatingFromDb);
+                }
             }
-        }
 
-        if (passengerRatingsAndNotDeleted.isEmpty()) {
-            throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
-        }
+            if (passengerRatingsAndNotDeleted.isEmpty()) {
+                throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+            }
 
-        return passengerRatingsAndNotDeleted;
+            return passengerRatingsAndNotDeleted;
+        }
     }
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))

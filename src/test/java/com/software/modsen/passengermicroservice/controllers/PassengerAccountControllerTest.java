@@ -3,8 +3,8 @@ package com.software.modsen.passengermicroservice.controllers;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.account.Currency;
 import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountCancelDto;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccountIncreaseDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceDownDto;
+import com.software.modsen.passengermicroservice.entities.account.PassengerAccountBalanceUpDto;
 import com.software.modsen.passengermicroservice.mappers.PassengerAccountMapper;
 import com.software.modsen.passengermicroservice.services.PassengerAccountService;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,10 +58,11 @@ public class PassengerAccountControllerTest {
     void getAllPassengerAccountsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerAccount> passengerAccounts = initPassengerAccounts();
-        doReturn(passengerAccounts).when(this.passengerAccountService).getAllPassengerAccounts();
+        doReturn(passengerAccounts).when(this.passengerAccountService).getAllPassengerAccounts(true);
 
         //when
-        ResponseEntity<List<PassengerAccount>> responseEntity = passengerAccountController.getAllPassengerAccounts();
+        ResponseEntity<List<PassengerAccount>> responseEntity = passengerAccountController
+                .getAllPassengerAccounts(true);
 
         //then
         assertNotNull(responseEntity);
@@ -74,11 +75,11 @@ public class PassengerAccountControllerTest {
     void getAllNotDeletedPassengerAccountsTest_ReturnsValidResponseEntity() {
         //given
         List<PassengerAccount> passengerAccounts = initPassengerAccounts();
-        doReturn(passengerAccounts).when(this.passengerAccountService).getAllNotDeletedPassengerAccounts();
+        doReturn(passengerAccounts).when(this.passengerAccountService).getAllPassengerAccounts(false);
 
         //when
         ResponseEntity<List<PassengerAccount>> responseEntity =
-                passengerAccountController.getAllNotDeletedPassengerAccounts();
+                passengerAccountController.getAllPassengerAccounts(false);
 
         //then
         assertNotNull(responseEntity);
@@ -133,18 +134,18 @@ public class PassengerAccountControllerTest {
     void increaseBalanceByPassengerIdTest_ReturnsValidResponseEntity() {
         //given
         int passengerId = 1;
-        PassengerAccountIncreaseDto passengerAccountIncreaseDto = new PassengerAccountIncreaseDto(1000f,
+        PassengerAccountBalanceUpDto passengerAccountBalanceUpDto = new PassengerAccountBalanceUpDto(1000f,
                 Currency.BYN);
         PassengerAccount passengerAccount = new PassengerAccount(1,
                 new Passenger(passengerId, "name", "name@gmail.com",
                         "+375299388823", false),
                 1100f, Currency.BYN);
         doReturn(passengerAccount).when(this.passengerAccountService).increaseBalance(passengerId,
-                passengerAccountMapper.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountIncreaseDto));
+                passengerAccountMapper.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto));
 
         //when
         ResponseEntity<PassengerAccount> responseEntity = passengerAccountController
-                .increaseBalanceByPassengerId(passengerId, passengerAccountIncreaseDto);
+                .increaseBalanceByPassengerId(passengerId, passengerAccountBalanceUpDto);
 
         //then
         assertNotNull(responseEntity);
@@ -155,7 +156,7 @@ public class PassengerAccountControllerTest {
         assertEquals(passengerAccount.getBalance(), responseEntity.getBody().getBalance());
         assertEquals(passengerAccount.getCurrency(), responseEntity.getBody().getCurrency());
         verify(this.passengerAccountService).increaseBalance(passengerId,
-                passengerAccountMapper.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountIncreaseDto));
+                passengerAccountMapper.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto));
     }
 
     @Test
@@ -163,18 +164,18 @@ public class PassengerAccountControllerTest {
     void cancelBalanceByPassengerIdTest_ReturnsValidResponseEntity() {
         //given
         int passengerId = 1;
-        PassengerAccountCancelDto passengerAccountCancelDto = new PassengerAccountCancelDto(1000f,
+        PassengerAccountBalanceDownDto passengerAccountBalanceDownDto = new PassengerAccountBalanceDownDto(1000f,
                 Currency.BYN);
         PassengerAccount passengerAccount = new PassengerAccount(1,
                 new Passenger(passengerId, "name", "name@gmail.com",
                         "+375299388823", false),
                 100f, Currency.BYN);
         doReturn(passengerAccount).when(this.passengerAccountService).cancelBalance(passengerId,
-                passengerAccountMapper.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountCancelDto));
+                passengerAccountMapper.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto));
 
         //when
         ResponseEntity<PassengerAccount> responseEntity = passengerAccountController
-                .cancelBalanceByPassengerId(passengerId, passengerAccountCancelDto);
+                .cancelBalanceByPassengerId(passengerId, passengerAccountBalanceDownDto);
 
         //then
         assertNotNull(responseEntity);
@@ -185,6 +186,6 @@ public class PassengerAccountControllerTest {
         assertEquals(passengerAccount.getBalance(), responseEntity.getBody().getBalance());
         assertEquals(passengerAccount.getCurrency(), responseEntity.getBody().getCurrency());
         verify(this.passengerAccountService).cancelBalance(passengerId,
-                passengerAccountMapper.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountCancelDto));
+                passengerAccountMapper.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto));
     }
 }

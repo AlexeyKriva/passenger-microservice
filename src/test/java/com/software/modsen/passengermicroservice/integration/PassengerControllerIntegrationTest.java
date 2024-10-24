@@ -1,6 +1,9 @@
 package com.software.modsen.passengermicroservice.integration;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.repositories.PassengerAccountRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
@@ -8,18 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,41 +25,27 @@ import java.util.List;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Testcontainers
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PassengerControllerIntegrationTest {
+public class PassengerControllerIntegrationTest extends TestconteinersConfig {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private PassengerService passengerService;
 
-    @Container
-    @ServiceConnection
-    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgres:15"))
-            .withDatabaseName("cab-aggregator-db")
-            .withUsername("postgres")
-            .withPassword("98479847");
+    @Autowired
+    private PassengerRepository passengerRepository;
 
-    @DynamicPropertySource
-    static void configureDatabase(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
-        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
-    }
+    @Autowired
+    private PassengerRatingRepository passengerRatingRepository;
 
-    static boolean isAlreadySetUped = false;
+    @Autowired
+    private PassengerAccountRepository passengerAccountRepository;
 
-    @BeforeEach
-    void setUp() {
-        if (!isAlreadySetUped) {
-            List<Passenger> passengers = defaultPassengers();
-            for (Passenger passenger : passengers) {
-                passengerService.savePassenger(passenger);
-            }
-            isAlreadySetUped = true;
-        }
+    @AfterEach
+    void setDown() {
+        passengerAccountRepository.deleteAll();
+        passengerRatingRepository.deleteAll();
+        passengerRepository.deleteAll();
     }
 
     private static List<Passenger> defaultPassengers() {
@@ -97,11 +78,15 @@ public class PassengerControllerIntegrationTest {
     }
 
     @Test
-    @Order(1)
     @SneakyThrows
     void getAllPassengersTest_ReturnsPassengers() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger")
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -128,11 +113,15 @@ public class PassengerControllerIntegrationTest {
     }
 
     @Test
-    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengersTest_ReturnsValidPassengers() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/not-deleted")
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -158,11 +147,13 @@ public class PassengerControllerIntegrationTest {
     }
 
     @Test
-    @Order(3)
     @SneakyThrows
     void getPassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/1")
+        Passenger passenger = defaultPassengers().get(0);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -182,16 +173,15 @@ public class PassengerControllerIntegrationTest {
                 {
                     "name": "Vova",
                     "email": "vova@gmail.com",
-                    "phone_number": "+375443377999"
+                    "phoneNumber": "+375443377999"
                 }
             """;
 
     @Test
-    @Order(4)
     @SneakyThrows
     void savePassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger")
+        MvcResult mvcResult = mockMvc.perform(post("/api/passengers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerDto))
                 .andExpect(status().isOk())
@@ -202,11 +192,9 @@ public class PassengerControllerIntegrationTest {
 
         //then
         assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("5")),
                 () -> assertTrue(responseContent.contains("Vova")),
                 () -> assertTrue(responseContent.contains("vova@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375443377999")),
-                () -> assertTrue(responseContent.contains("false"))
+                () -> assertTrue(responseContent.contains("+375443377999"))
         );
     }
 
@@ -214,16 +202,18 @@ public class PassengerControllerIntegrationTest {
                 {
                     "name": "Andrei",
                     "email": "andrei@gmail.com",
-                    "phone_number": "+375293344555"
+                    "phoneNumber": "+375293344555"
                 }
             """;
 
     @Test
-    @Order(5)
     @SneakyThrows
     void updatePassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/2")
+        Passenger passenger = defaultPassengers().get(1);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerUpdateDto))
                 .andExpect(status().isOk())
@@ -234,11 +224,9 @@ public class PassengerControllerIntegrationTest {
 
         //then
         assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("2")),
                 () -> assertTrue(responseContent.contains("Andrei")),
                 () -> assertTrue(responseContent.contains("andrei@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375293344555")),
-                () -> assertTrue(responseContent.contains("false"))
+                () -> assertTrue(responseContent.contains("+375293344555"))
         );
     }
 
@@ -250,11 +238,13 @@ public class PassengerControllerIntegrationTest {
             """;
 
     @Test
-    @Order(6)
     @SneakyThrows
     void patchPassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/1")
+        Passenger passenger = defaultPassengers().get(3);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(patch("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerPatchDto))
                 .andExpect(status().isOk())
@@ -265,20 +255,20 @@ public class PassengerControllerIntegrationTest {
 
         //then
         assertAll("Check response content",
-                () -> assertTrue(responseContent.contains("1")),
                 () -> assertTrue(responseContent.contains("Vasya")),
                 () -> assertTrue(responseContent.contains("vasya@gmail.com")),
-                () -> assertTrue(responseContent.contains("+375293333333")),
-                () -> assertTrue(responseContent.contains("false"))
+                () -> assertTrue(responseContent.contains("+375292342341"))
         );
     }
 
     @Test
-    @Order(7)
     @SneakyThrows
     void softDeletePassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/4/soft-delete")
+        Passenger passenger = defaultPassengers().get(3);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(delete("/api/passengers/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -297,11 +287,13 @@ public class PassengerControllerIntegrationTest {
     }
 
     @Test
-    @Order(8)
     @SneakyThrows
     void softRecoveryPassengerTest_ReturnsPassenger() {
         //given
-        MvcResult mvcResult = mockMvc.perform(post("/api/passenger/3/soft-recovery")
+        Passenger passenger = defaultPassengers().get(2);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(post("/api/passengers/" + passenger.getId() + "/restore")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();

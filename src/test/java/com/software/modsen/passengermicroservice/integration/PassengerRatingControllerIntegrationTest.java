@@ -2,6 +2,9 @@ package com.software.modsen.passengermicroservice.integration;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
+import com.software.modsen.passengermicroservice.repositories.PassengerAccountRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import com.software.modsen.passengermicroservice.services.PassengerRatingService;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
@@ -33,41 +36,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PassengerRatingControllerIntegrationTest {
+public class PassengerRatingControllerIntegrationTest extends TestconteinersConfig {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private PassengerService passengerService;
 
-    @Container
-    @ServiceConnection
-    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgres:15"))
-            .withDatabaseName("cab-aggregator-db")
-            .withUsername("postgres")
-            .withPassword("98479847");
+    @Autowired
+    private PassengerRepository passengerRepository;
 
-    @DynamicPropertySource
-    static void configureDatabase(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
-        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
-    }
+    @Autowired
+    private PassengerRatingRepository passengerRatingRepository;
 
-    static boolean isAlreadySetUped = false;
+    @Autowired
+    private PassengerAccountRepository passengerAccountRepository;
 
-    @BeforeEach
-    void setUp() {
-        if (!isAlreadySetUped) {
-            List<Passenger> passengers = defaultPassengers();
-            for (Passenger passenger : passengers) {
-                passengerService.savePassenger(passenger);
-            }
-            isAlreadySetUped = true;
-        }
+    @AfterEach
+    void setDown() {
+        passengerAccountRepository.deleteAll();
+        passengerRatingRepository.deleteAll();
+        passengerRepository.deleteAll();
     }
 
     private static List<Passenger> defaultPassengers() {
@@ -94,11 +83,15 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
-    @Order(1)
     @SneakyThrows
     void getAllPassengerRatingsTest_ReturnsPassengerRatings() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating")
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -117,11 +110,15 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
-    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengerRatingsTest_ReturnsValidPassengerRatings() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/not-deleted")
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -140,11 +137,14 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
-    @Order(3)
     @SneakyThrows
     void getPassengerRatingByIdTest_ReturnsPassengerRating() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/1")
+        Passenger passenger = defaultPassengers().get(0);
+        passenger = passengerService.savePassenger(passenger);
+        PassengerRating passengerRating = passengerRatingRepository.findByPassengerId(passenger.getId()).get();
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/ratings/" + passengerRating.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -161,11 +161,13 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
-    @Order(4)
     @SneakyThrows
     void getPassengerRatingByPassengerIdTest_ReturnsPassengerRating() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/rating/2/by-passenger")
+        Passenger passenger = defaultPassengers().get(1);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId() +"/ratings")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -183,17 +185,19 @@ public class PassengerRatingControllerIntegrationTest {
 
     private final String passengerRatingDto = """
                 {
-                    "rating_value": 5,
-                    "number_of_ratings": 100
+                    "ratingValue": 5,
+                    "numberOfRatings": 100
                 }
             """;
 
     @Test
-    @Order(5)
     @SneakyThrows
     void updatePassengerRatingTest_ReturnsPassengerRating() {
         //given
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/rating/1")
+        Passenger passenger = defaultPassengers().get(0);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/ratings/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerRatingDto))
                 .andExpect(status().isOk())
@@ -211,11 +215,13 @@ public class PassengerRatingControllerIntegrationTest {
     }
 
     @Test
-    @Order(6)
     @SneakyThrows
     void patchPassengerRatingByIdTest_ReturnsPassengerRating() {
         //given
-        MvcResult mvcResult = mockMvc.perform(patch("/api/passenger/rating/1")
+        Passenger passenger = defaultPassengers().get(0);
+        passenger = passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(patch("/api/passengers/ratings/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(passengerRatingDto))
                 .andExpect(status().isOk())

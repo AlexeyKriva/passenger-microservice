@@ -7,7 +7,7 @@ Contract.make {
     description "Should return passenger account response entity"
     request {
         method 'PUT'
-        url '/api/passenger/account/2/increase'
+        url '/api/passengers/2/accounts/up'
         headers {
             header('Content-Type', 'application/vnd.fraud.v1+json')
         }

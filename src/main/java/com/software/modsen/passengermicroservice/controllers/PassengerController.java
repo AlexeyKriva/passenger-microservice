@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping(value = "/api/passenger", produces = "application/json")
+@RequestMapping(value = "/api/passengers", produces = "application/json")
 @AllArgsConstructor
 @Tag(name = "Passenger controller", description = "Allows to interact with passengers.")
 public class PassengerController {
@@ -28,16 +28,10 @@ public class PassengerController {
     @Operation(
             description = "Allows to get all passengers."
     )
-    public ResponseEntity<List<Passenger>> getAllPassengers() {
-        return ResponseEntity.ok(passengerService.getAllPassengers());
-    }
-
-    @GetMapping("/not-deleted")
-    @Operation(
-            description = "Allows to get all not deleted passengers."
-    )
-    public ResponseEntity<List<Passenger>> getAllNotDeletedPassengers() {
-        return ResponseEntity.ok(passengerService.getNotDeletedAllPassengers());
+    public ResponseEntity<List<Passenger>> getAllPassengers(@RequestParam(name = "includeDeleted", required = false,
+                                                            defaultValue = "true")
+                                                            boolean includeDeleted) {
+        return ResponseEntity.ok(passengerService.getAllPassengers(includeDeleted));
     }
 
     @GetMapping("/{id}")
@@ -86,7 +80,7 @@ public class PassengerController {
                 PASSENGER_MAPPER.fromPassengerPatchDtoToPassengerRating(passengerPatchDto)));
     }
 
-    @PostMapping("/{id}/soft-delete")
+    @DeleteMapping("/{id}")
     @Operation(
             description = "Allows you to soft delete passenger by id."
     )
@@ -95,7 +89,7 @@ public class PassengerController {
         return ResponseEntity.ok(passengerService.softDeletePassengerById(id));
     }
 
-    @PostMapping("/{id}/soft-recovery")
+    @PostMapping("/{id}/restore")
     @Operation(
             description = "Allows you to soft recovery passenger by id."
     )
