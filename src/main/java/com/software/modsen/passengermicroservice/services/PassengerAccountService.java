@@ -27,16 +27,15 @@ public class PassengerAccountService {
     private PassengerRepository passengerRepository;
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerAccount> getAllPassengerAccounts() {
-        return passengerAccountRepository.findAll();
-    }
-
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerAccount> getAllNotDeletedPassengerAccounts() {
-        return passengerAccountRepository.findAll().stream()
-                .filter(passengerAccount -> passengerRepository.existsByIdAndIsDeleted(
-                        passengerAccount.getPassenger().getId(), false))
-                .collect(Collectors.toList());
+    public List<PassengerAccount> getAllPassengerAccounts(boolean includeDeleted) {
+        if (includeDeleted) {
+            return passengerAccountRepository.findAll();
+        } else {
+            return passengerAccountRepository.findAll().stream()
+                    .filter(passengerAccount -> passengerRepository.existsByIdAndIsDeleted(
+                            passengerAccount.getPassenger().getId(), false))
+                    .collect(Collectors.toList());
+        }
     }
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))

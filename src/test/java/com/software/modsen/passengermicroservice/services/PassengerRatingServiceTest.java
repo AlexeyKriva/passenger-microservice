@@ -50,7 +50,8 @@ public class PassengerRatingServiceTest {
         doReturn(passengerRatings).when(passengerRatingRepository).findAll();
 
         //when
-        List<PassengerRating> passengersRatingsFromDb = passengerRatingService.getAllPassengerRatings();
+        List<PassengerRating> passengersRatingsFromDb = passengerRatingService
+                .getAllPassengerRatings(true);
 
         //then
         assertNotNull(passengersRatingsFromDb);
@@ -70,7 +71,7 @@ public class PassengerRatingServiceTest {
                         false);
 
         //when
-        List<PassengerRating> passengerRatingsFromDb = passengerRatingService.getAllNotDeletedPassengerRatings();
+        List<PassengerRating> passengerRatingsFromDb = passengerRatingService.getAllPassengerRatings(false);
 
         //then
         assertNotNull(passengerRatingsFromDb);

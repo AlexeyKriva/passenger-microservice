@@ -1,6 +1,9 @@
 package com.software.modsen.passengermicroservice.integration;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
+import com.software.modsen.passengermicroservice.repositories.PassengerAccountRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRatingRepository;
+import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import com.software.modsen.passengermicroservice.services.PassengerService;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
@@ -8,18 +11,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.List;
 
@@ -31,41 +26,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Testcontainers
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PassengerAccountControllerIntegrationTest {
+public class PassengerAccountControllerIntegrationTest extends TestconteinersConfig {
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private PassengerService passengerService;
 
-    @Container
-    @ServiceConnection
-    private static final PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>(
-            DockerImageName.parse("postgres:15"))
-            .withDatabaseName("cab-aggregator-db")
-            .withUsername("postgres")
-            .withPassword("98479847");
+    @Autowired
+    private PassengerRepository passengerRepository;
 
-    @DynamicPropertySource
-    static void configureDatabase(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
-        registry.add("spring.datasource.username", postgreSQLContainer::getUsername);
-        registry.add("spring.datasource.password", postgreSQLContainer::getPassword);
-    }
+    @Autowired
+    private PassengerRatingRepository passengerRatingRepository;
 
-    static boolean isAlreadySetUped = false;
+    @Autowired
+    private PassengerAccountRepository passengerAccountRepository;
 
-    @BeforeEach
-    void setUp() {
-        if (!isAlreadySetUped) {
-            List<Passenger> passengers = defaultPassengers();
-            for (Passenger passenger : passengers) {
-                passengerService.savePassenger(passenger);
-            }
-            isAlreadySetUped = true;
-        }
+    @AfterEach
+    void setDown() {
+        passengerAccountRepository.deleteAll();
+        passengerRatingRepository.deleteAll();
+        passengerRepository.deleteAll();
     }
 
     private static List<Passenger> defaultPassengers() {
@@ -92,11 +73,15 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
-    @Order(1)
     @SneakyThrows
     void getAllPassengerAccountsTest_ReturnsPassengerAccounts() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account")
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts?includeDeleted=true")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -115,10 +100,15 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
-    @Order(2)
     @SneakyThrows
     void getAllNotDeletedPassengerAccounts_ReturnsPassengerAccounts() {
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/not-deleted")
+        //given
+        List<Passenger> passengers = defaultPassengers();
+        for (Passenger passenger : passengers) {
+            passengerService.savePassenger(passenger);
+        }
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts?includeDeleted=false")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -137,11 +127,13 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
-    @Order(3)
     @SneakyThrows
     void getNotDeletedPassengerAccountsByIdTest_ReturnsPassengerAccount() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/1")
+        Passenger passenger = defaultPassengers().get(0);
+        passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/accounts/" + passenger.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -158,11 +150,14 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
-    @Order(4)
     @SneakyThrows
-    void getNotDeletedPassengerAccountsByPassengerIdTest_ReturnsPassengerAccount (){
+    void getNotDeletedPassengerAccountsByPassengerIdTest_ReturnsPassengerAccount() {
         //given
-        MvcResult mvcResult = mockMvc.perform(get("/api/passenger/account/2/by-passenger")
+        Passenger passenger = defaultPassengers().get(1);
+        passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(get("/api/passengers/" + passenger.getId()
+                        + "/accounts")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -178,14 +173,14 @@ public class PassengerAccountControllerIntegrationTest {
         );
     }
 
-    private final String passengerAccountIncreaseDto = """
+    private final String passengerAccountUpDto = """
             {
                 "balance": 1000.0,
                 "currency": "BYN"
             }
             """;
 
-    private final String passengerAccountCancelDto = """
+    private final String passengerAccountDownDto = """
             {
                 "balance": 800.0,
                 "currency": "BYN"
@@ -193,13 +188,16 @@ public class PassengerAccountControllerIntegrationTest {
             """;
 
     @Test
-    @Order(5)
     @SneakyThrows
     void increaseBalanceByPassengerIdTest_ReturnsPassengerAccount() {
         //given
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/1/increase")
+        Passenger passenger = defaultPassengers().get(0);
+        passengerService.savePassenger(passenger);
+
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                        "/accounts/up")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerAccountIncreaseDto))
+                        .content(passengerAccountUpDto))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -215,17 +213,21 @@ public class PassengerAccountControllerIntegrationTest {
     }
 
     @Test
-    @Order(6)
     @SneakyThrows
     void cancelBalanceByPassengerIdTest_ReturnsPassengerAccount() {
         //given
-        mockMvc.perform(put("/api/passenger/account/2/increase")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(passengerAccountIncreaseDto));
+        Passenger passenger = defaultPassengers().get(1);
+        passengerService.savePassenger(passenger);
 
-        MvcResult mvcResult = mockMvc.perform(put("/api/passenger/account/2/cancel")
+        mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                "/accounts/up")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(passengerAccountUpDto));
+
+        MvcResult mvcResult = mockMvc.perform(put("/api/passengers/" + passenger.getId() +
+                        "/accounts/down")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(passengerAccountCancelDto))
+                        .content(passengerAccountDownDto))
                 .andExpect(status().isOk())
                 .andReturn();
 
