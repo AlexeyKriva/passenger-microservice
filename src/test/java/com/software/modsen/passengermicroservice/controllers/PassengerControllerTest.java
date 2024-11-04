@@ -49,10 +49,12 @@ class PassengerControllerTest {
     void getAllPassengersTest_ReturnsValidResponseEntity() {
         //given
         List<Passenger> passengersFromDb = initPassengers();
-        doReturn(passengersFromDb).when(this.passengerService).getAllPassengers(true);
+        doReturn(passengersFromDb).when(this.passengerService).getAllPassengersOrPassengerByName(true,
+                null);
 
         //when
-        ResponseEntity<List<Passenger>> responseEntity = passengerController.getAllPassengers(true);
+        ResponseEntity<List<Passenger>> responseEntity = passengerController
+                .getAllPassengersOrPassengerById(true, null);
 
         //then
         assertNotNull(responseEntity);
@@ -65,10 +67,12 @@ class PassengerControllerTest {
     void getAllNotDeletedPassengersTest_ReturnsValidResponseEntity() {
         //given
         List<Passenger> passengersFromDb = initPassengers();
-        doReturn(passengersFromDb).when(this.passengerService).getAllPassengers(false);
+        doReturn(passengersFromDb).when(this.passengerService)
+                .getAllPassengersOrPassengerByName(false, null);
 
         //when
-        ResponseEntity<List<Passenger>> responseEntity = passengerController.getAllPassengers(false);
+        ResponseEntity<List<Passenger>> responseEntity = passengerController
+                .getAllPassengersOrPassengerById(false, null);
 
         //then
         assertNotNull(responseEntity);

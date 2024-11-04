@@ -29,14 +29,26 @@ public class PassengerService {
     private PassengerSubject passengerSubject;
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<Passenger> getAllPassengers(boolean includeDeleted) {
-        if (includeDeleted) {
+    public List<Passenger> getAllPassengersOrPassengerByName(boolean includeDeleted, String name) {
+        if (name != null) {
+            return List.of(getPassengerByName(name));
+        } else if (includeDeleted) {
             return passengerRepository.findAll();
         } else {
             return passengerRepository.findAll().stream()
                     .filter(passenger -> !passenger.isDeleted())
                     .collect(Collectors.toList());
         }
+    }
+
+    public Passenger getPassengerByName(String name) {
+        Optional<Passenger> passengerFromDb = passengerRepository.findByName(name);
+
+        if (passengerFromDb.isPresent()) {
+            return passengerFromDb.get();
+        }
+
+        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
     }
 
     @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))

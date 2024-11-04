@@ -47,7 +47,8 @@ public class PassengerServiceTest {
         doReturn(passengers).when(passengerRepository).findAll();
 
         //when
-        List<Passenger> passengersFromDb = passengerService.getAllPassengers(true);
+        List<Passenger> passengersFromDb = passengerService
+                .getAllPassengersOrPassengerByName(true, null);
 
         //then
         assertNotNull(passengersFromDb);
@@ -62,7 +63,8 @@ public class PassengerServiceTest {
         doReturn(passengers).when(passengerRepository).findAll();
 
         //when
-        List<Passenger> passengersFromDb = passengerService.getAllPassengers(false);
+        List<Passenger> passengersFromDb = passengerService
+                .getAllPassengersOrPassengerByName(false, null);
 
         //then
         assertNotNull(passengersFromDb);

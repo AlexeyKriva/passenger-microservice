@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.postgresql.util.PSQLException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,10 +27,10 @@ public class PassengerController {
     @Operation(
             description = "Allows to get all passengers."
     )
-    public ResponseEntity<List<Passenger>> getAllPassengers(@RequestParam(name = "includeDeleted", required = false,
-                                                            defaultValue = "true")
-                                                            boolean includeDeleted) {
-        return ResponseEntity.ok(passengerService.getAllPassengers(includeDeleted));
+    public ResponseEntity<List<Passenger>> getAllPassengersOrPassengerById(@RequestParam(name = "includeDeleted",
+            required = false, defaultValue = "true") boolean includeDeleted, @RequestParam(name = "name",
+            required = false) String name) {
+        return ResponseEntity.ok(passengerService.getAllPassengersOrPassengerByName(includeDeleted, name));
     }
 
     @GetMapping("/{id}")
@@ -55,7 +54,6 @@ public class PassengerController {
     }
 
     @PutMapping("/{id}")
-    @PostMapping
     @Operation(
             description = "Allows to update all passenger fields."
     )
