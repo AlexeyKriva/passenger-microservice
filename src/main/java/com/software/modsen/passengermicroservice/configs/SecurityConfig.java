@@ -34,7 +34,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/passengers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/passengers/accounts",
                                 "/api/passengers/ratings").hasRole("ADMIN")
-                        .anyRequest().hasAnyRole("PASSENGER", "ADMIN")
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(authEntryPoint)
