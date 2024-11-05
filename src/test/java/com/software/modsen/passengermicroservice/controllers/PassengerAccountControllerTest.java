@@ -45,11 +45,11 @@ public class PassengerAccountControllerTest {
                 new PassengerAccount(1,
                         new Passenger(1, "name", "name@gmail.com",
                                 "+375299388823", false),
-                        100f, Currency.BYN),
+                        100f, Currency.BYN, 0L),
                 new PassengerAccount(2,
                         new Passenger(2, "name1", "name1@gmail.com",
                                 "+375299388824", true),
-                        90f, Currency.BYN)
+                        90f, Currency.BYN, 0L)
         );
     }
 
@@ -95,7 +95,7 @@ public class PassengerAccountControllerTest {
         PassengerAccount passengerAccount = new PassengerAccount(passengerAccountId,
                 new Passenger(1, "name", "name@gmail.com",
                         "+375299388823", false),
-                100f, Currency.BYN);
+                100f, Currency.BYN, 0L);
         doReturn(passengerAccount).when(this.passengerAccountService).getPassengerAccountById(passengerAccountId);
 
         //when
@@ -116,7 +116,7 @@ public class PassengerAccountControllerTest {
         PassengerAccount passengerAccount = new PassengerAccount(1,
                 new Passenger(passengerId, "name", "name@gmail.com",
                         "+375299388823", false),
-                100f, Currency.BYN);
+                100f, Currency.BYN, 0L);
         doReturn(passengerAccount).when(this.passengerAccountService).getPassengerAccountByPassengerId(passengerId);
 
         //when
@@ -139,7 +139,7 @@ public class PassengerAccountControllerTest {
         PassengerAccount passengerAccount = new PassengerAccount(1,
                 new Passenger(passengerId, "name", "name@gmail.com",
                         "+375299388823", false),
-                1100f, Currency.BYN);
+                1100f, Currency.BYN, 0L);
         doReturn(passengerAccount).when(this.passengerAccountService).increaseBalance(passengerId,
                 passengerAccountMapper.fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto));
 
@@ -169,7 +169,7 @@ public class PassengerAccountControllerTest {
         PassengerAccount passengerAccount = new PassengerAccount(1,
                 new Passenger(passengerId, "name", "name@gmail.com",
                         "+375299388823", false),
-                100f, Currency.BYN);
+                100f, Currency.BYN, 0L);
         doReturn(passengerAccount).when(this.passengerAccountService).cancelBalance(passengerId,
                 passengerAccountMapper.fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto));
 

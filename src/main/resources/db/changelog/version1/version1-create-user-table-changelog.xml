@@ -75,4 +75,18 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="version1-19" author="postgres">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="version" tableName="passenger_account"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="passenger_account">
+            <column name="version" type="bigint" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

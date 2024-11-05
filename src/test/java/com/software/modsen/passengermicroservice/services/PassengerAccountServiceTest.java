@@ -39,10 +39,10 @@ public class PassengerAccountServiceTest {
         return List.of(
                 new PassengerAccount(1, new Passenger(1, "Alex", "post@gmail.com",
                         "+37441234567", false),
-                        100f, Currency.BYN),
+                        100f, Currency.BYN, 0L),
                 new PassengerAccount(1, new Passenger(2, "Ivan", "ivan@gmail.com",
                         "+375332929293", true),
-                        100f, Currency.BYN));
+                        100f, Currency.BYN, 0L));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class PassengerAccountServiceTest {
         long passengerAccountId = 1;
         Optional<PassengerAccount> passengerAccount = Optional.of(new PassengerAccount(1, new Passenger(1,
                 "Alex", "post@gmail.com", "+37441234567", false),
-                100f, Currency.BYN));
+                100f, Currency.BYN, 0L));
         doReturn(passengerAccount).when(this.passengerAccountRepository).findById(passengerAccountId);
 
         //when
@@ -125,7 +125,7 @@ public class PassengerAccountServiceTest {
         long passengerId = 1;
         Optional<PassengerAccount> passengerAccount = Optional.of(new PassengerAccount(1, new Passenger(passengerId,
                 "Alex", "post@gmail.com", "+37441234567", false),
-                100f, Currency.BYN));
+                100f, Currency.BYN, 0L));
         doReturn(passengerAccount).when(this.passengerAccountRepository).findByPassengerId(passengerId);
 
         //when
@@ -162,7 +162,7 @@ public class PassengerAccountServiceTest {
         long passengerId = 1;
         Optional<PassengerAccount> passengerAccount = Optional.of(new PassengerAccount(1, new Passenger(1,
                 "Alex", "post@gmail.com", "+37441234567", true),
-                100f, Currency.BYN));
+                100f, Currency.BYN, 0L));
         doReturn(passengerAccount).when(this.passengerAccountRepository).findByPassengerId(passengerId);
 
         //when
@@ -179,14 +179,14 @@ public class PassengerAccountServiceTest {
     void increaseBalanceTest_WithoutException_ReturnsPassengerAccount() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         Optional<PassengerAccount> passengerAccountOptional = Optional.of(new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                false), 100f, Currency.BYN));
+                false), 100f, Currency.BYN, 0L));
         doReturn(passengerAccountOptional).when(passengerAccountRepository).findByPassengerId(passengerId);
         PassengerAccount finalPassengerAccount = new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                false), 150f, Currency.BYN);
+                false), 150f, Currency.BYN, 0L);
         doReturn(finalPassengerAccount).when(this.passengerAccountRepository).save(finalPassengerAccount);
 
         //when
@@ -207,7 +207,7 @@ public class PassengerAccountServiceTest {
     void increaseBalanceTest_WithPassengerNotFoundException_ReturnsException() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         doThrow(new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE))
                 .when(passengerAccountRepository).findByPassengerId(passengerId);
 
@@ -224,10 +224,10 @@ public class PassengerAccountServiceTest {
     void increaseBalanceTest_WithPassengerWasDeletedException_ReturnsException() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         Optional<PassengerAccount> passengerAccountOptional = Optional.of(new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                true), 100f, Currency.BYN));
+                true), 100f, Currency.BYN, 0L));
         doReturn(passengerAccountOptional).when(passengerAccountRepository).findByPassengerId(passengerId);
 
         //when
@@ -244,14 +244,14 @@ public class PassengerAccountServiceTest {
     void cancelBalanceTest_WithoutExceptions_ReturnsValidBalance() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         Optional<PassengerAccount> passengerAccountOptional = Optional.of(new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                false), 100f, Currency.BYN));
+                false), 100f, Currency.BYN, 0L));
         doReturn(passengerAccountOptional).when(passengerAccountRepository).findByPassengerId(passengerId);
         PassengerAccount finalPassengerAccount = new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                false), 50f, Currency.BYN);
+                false), 50f, Currency.BYN, 0L);
         doReturn(finalPassengerAccount).when(this.passengerAccountRepository).save(finalPassengerAccount);
 
         //when
@@ -272,7 +272,7 @@ public class PassengerAccountServiceTest {
     void cancelBalanceTest_WithPassengerNotFoundException_ReturnsException() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         doThrow(new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE))
                 .when(passengerAccountRepository).findByPassengerId(passengerId);
 
@@ -289,10 +289,10 @@ public class PassengerAccountServiceTest {
     void cancelBalanceTest_WithPassengerWasDeletedException_ReturnsPassengerAccount() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 50f, Currency.BYN, 0L);
         Optional<PassengerAccount> passengerAccountOptional = Optional.of(new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                true), 100f, Currency.BYN));
+                true), 100f, Currency.BYN, 0L));
         doReturn(passengerAccountOptional).when(passengerAccountRepository).findByPassengerId(passengerId);
 
         //when
@@ -309,10 +309,10 @@ public class PassengerAccountServiceTest {
     void cancelBalanceTest_WithInsufficientAccountBalanceExceptionException_ReturnsException() {
         //given
         long passengerId = 1;
-        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 150f, Currency.BYN);
+        PassengerAccount addingPassengerAccount = new PassengerAccount(0, null, 150f, Currency.BYN, 0L);
         Optional<PassengerAccount> passengerAccountOptional = Optional.of(new PassengerAccount(
                 1, new Passenger(1, "Alex", "post@gmail.com", "+37441234567",
-                false), 100f, Currency.BYN));
+                false), 100f, Currency.BYN, 0L));
         doReturn(passengerAccountOptional).when(passengerAccountRepository).findByPassengerId(passengerId);
 
         //when

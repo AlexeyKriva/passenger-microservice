@@ -64,13 +64,13 @@ public class PassengerAccountService {
         throw new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE);
     }
 
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
     @Transactional
     public PassengerAccount increaseBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
         Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
 
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
+            updatingPassengerAccount.setVersion(passengerAccountFromDb.get().getVersion());
 
             if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
                 updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
@@ -95,6 +95,7 @@ public class PassengerAccountService {
 
         if (passengerAccountFromDb.isPresent()) {
             updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
+            updatingPassengerAccount.setVersion(passengerAccountFromDb.get().getVersion());
 
             if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
                 updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
