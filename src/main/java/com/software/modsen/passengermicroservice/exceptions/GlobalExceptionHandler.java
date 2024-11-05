@@ -1,5 +1,6 @@
 package com.software.modsen.passengermicroservice.exceptions;
 
+import jakarta.persistence.OptimisticLockException;
 import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -105,5 +106,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DatabaseConnectionRefusedException.class)
     public ResponseEntity<String> pSQLExceptionHandler(DatabaseConnectionRefusedException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<String> handleOptimisticLockException(OptimisticLockException exception) {
+        return new ResponseEntity<>(OPTIMISTIC_LOCK_MESSAGE, HttpStatus.CONFLICT);
     }
 }

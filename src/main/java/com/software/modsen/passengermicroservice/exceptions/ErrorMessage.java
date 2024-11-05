@@ -23,4 +23,6 @@ public class ErrorMessage {
 
     public static final String CANNOT_GET_DATA_MESSAGE = " For this reason you cannot get the data.";
     public static final String CANNOT_UPDATE_DATA_MESSAGE = " For this reason you cannot update the data.";
+    public static final String OPTIMISTIC_LOCK_MESSAGE = "The entity you attempted to modify was modified by another" +
+            " transaction. Please reload the entity and try again.";
 }
