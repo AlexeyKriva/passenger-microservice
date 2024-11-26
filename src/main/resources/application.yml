@@ -31,6 +31,8 @@ logging:
       netflix:
         eureka: off
         discovery: off
+    org.apache.kafka.clients.NetworkClient: ERROR
+    org.apache.kafka: ERROR
 
 management:
   endpoints:

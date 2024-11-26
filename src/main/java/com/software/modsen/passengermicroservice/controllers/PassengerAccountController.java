@@ -13,7 +13,10 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -28,63 +31,63 @@ public class PassengerAccountController {
     @Operation(
             description = "Allows to get all passenger accounts."
     )
-    public ResponseEntity<List<PassengerAccount>> getAllPassengerAccounts(@RequestParam(name = "includeDeleted",
+    public Flux<PassengerAccount> getAllPassengerAccounts(@RequestParam(name = "includeDeleted",
             required = false, defaultValue = "true")
                                                                               boolean includeDeleted) {
-        return ResponseEntity.ok(passengerAccountService.getAllPassengerAccounts(includeDeleted));
+        return passengerAccountService.getAllPassengerAccounts(includeDeleted);
     }
 
     @GetMapping("/accounts/{id}")
     @Operation(
             description = "Allows to get not deleted passenger account by account id."
     )
-    public ResponseEntity<PassengerAccount> getNotDeletedPassengerAccountsById(
+    public Mono<PassengerAccount> getNotDeletedPassengerAccountsById(
             @PathVariable("id")
             @Parameter(description = "Passenger account id.")
-            long id) {
-        return ResponseEntity.ok(passengerAccountService.getPassengerAccountById(id));
+            String id) {
+        return passengerAccountService.getPassengerAccountById(id);
     }
 
     @GetMapping("/{passenger_id}/accounts")
     @Operation(
             description = "Allows to get not deleted passenger account by account passenger id."
     )
-    public ResponseEntity<PassengerAccount> getNotDeletedPassengerAccountsByPassengerId(
+    public Mono<PassengerAccount> getNotDeletedPassengerAccountsByPassengerId(
             @PathVariable("passenger_id")
             @Parameter(description = "Passenger id.")
-            long passengerId) {
-        return ResponseEntity.ok(passengerAccountService.getPassengerAccountByPassengerId(passengerId));
+            String passengerId) {
+        return passengerAccountService.getPassengerAccountByPassengerId(passengerId);
     }
 
     @PutMapping("/{passenger_id}/accounts/up")
     @Operation(
             description = "Allows to increase passenger balance by passenger id."
     )
-    public ResponseEntity<PassengerAccount> increaseBalanceByPassengerId(
+    public Mono<PassengerAccount> increaseBalanceByPassengerId(
             @PathVariable("passenger_id")
             @Parameter(description = "Passenger id.")
-            long passengerId,
+            String passengerId,
             @Valid
             @RequestBody
             @Parameter(description = "Entity to increase passenger balance.")
             PassengerAccountBalanceUpDto passengerAccountBalanceUpDto) {
-        return ResponseEntity.ok(passengerAccountService.increaseBalance(
+        return passengerAccountService.increaseBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
-                                .fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto)));
+                                .fromPassengerAccountIncreaseDtoToPassengerAccount(passengerAccountBalanceUpDto));
     }
 
     @PutMapping("/{passenger_id}/accounts/down")
     @Operation(
             description = "Allows to cancel passenger balance by passenger id."
     )
-    public ResponseEntity<PassengerAccount> cancelBalanceByPassengerId(
-            @PathVariable("passenger_id") @Parameter(description = "Passenger id.") long passengerId,
+    public Mono<PassengerAccount> cancelBalanceByPassengerId(
+            @PathVariable("passenger_id") @Parameter(description = "Passenger id.") String passengerId,
             @Valid @RequestBody @Parameter(description = "Entity to cancel passenger balance.")
             PassengerAccountBalanceDownDto passengerAccountBalanceDownDto) {
-        return ResponseEntity.ok(passengerAccountService.cancelBalance(
+        return passengerAccountService.cancelBalance(
                         passengerId,
                         PASSENGER_ACCOUNT_MAPPER
-                                .fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto)));
+                                .fromPassengerAccountCancelDtoToPassengerAccount(passengerAccountBalanceDownDto));
     }
 }

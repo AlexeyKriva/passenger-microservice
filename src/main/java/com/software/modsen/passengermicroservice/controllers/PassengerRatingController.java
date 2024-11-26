@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -27,56 +29,56 @@ public class PassengerRatingController {
     @Operation(
             description = "Allows to get all passenger ratings."
     )
-    public ResponseEntity<List<PassengerRating>> getAllPassengerRatings(@RequestParam(name = "includeDeleted",
+    public Flux<PassengerRating> getAllPassengerRatings(@RequestParam(name = "includeDeleted",
             required = false, defaultValue = "true")
                                                                             boolean includeDeleted) {
-        return ResponseEntity.ok(passengerRatingService.getAllPassengerRatings(includeDeleted));
+        return passengerRatingService.getAllPassengerRatings(includeDeleted);
     }
 
     @GetMapping("/ratings/{id}")
     @Operation(
             description = "Allows to get passenger rating by id."
     )
-    public ResponseEntity<PassengerRating> getPassengerRatingById(
+    public Mono<PassengerRating> getPassengerRatingById(
             @PathVariable("id")
             @Parameter(description = "Passenger rating id.")
-            long id) {
-        return ResponseEntity.ok(passengerRatingService.getPassengerRatingById(id));
+            String id) {
+        return passengerRatingService.getPassengerRatingById(id);
     }
 
     @GetMapping("/{passenger_id}/ratings")
     @Operation(
             description = "Allows to get passenger rating by passenger id."
     )
-    public ResponseEntity<PassengerRating> getPassengerRatingByPassengerId(
+    public Mono<PassengerRating> getPassengerRatingByPassengerId(
             @PathVariable("passenger_id") @Parameter(description = "Passenger id.")
-            long id) {
-        return ResponseEntity.ok(passengerRatingService.getPassengerRatingByPassengerId(id));
+            String id) {
+        return passengerRatingService.getPassengerRatingByPassengerId(id);
     }
 
     @PutMapping("/ratings/{id}")
     @Operation(
             description = "Allows to update passenger rating by id."
     )
-    public ResponseEntity<PassengerRating> putPassengerRatingById(@PathVariable("id") long id,
+    public Mono<PassengerRating> putPassengerRatingById(@PathVariable("id") String id,
                                                                   @Valid @RequestBody
                                                                   @Parameter(description = "Passenger rating entity.")
                                                                   PassengerRatingPutDto passengerRatingPutDto) {
-        return ResponseEntity.ok(passengerRatingService.putPassengerRatingById(
+        return passengerRatingService.putPassengerRatingById(
                 id,
-                PASSENGER_RATING_MAPPER.fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto)));
+                PASSENGER_RATING_MAPPER.fromPassengerRatingPutDtoToPassengerRating(passengerRatingPutDto));
     }
 
     @PatchMapping("/ratings/{id}")
     @Operation(
             description = "Allows to update passenger rating by id."
     )
-    public ResponseEntity<PassengerRating> patchPassengerRatingById(@PathVariable("id") long id,
+    public Mono<PassengerRating> patchPassengerRatingById(@PathVariable("id") String id,
                                                                    @Valid @RequestBody
                                                                    @Parameter(description = "Passenger rating entity.")
                                                                    PassengerRatingPatchDto passengerRatingPatchDto) {
-        return ResponseEntity.ok(passengerRatingService.patchPassengerRatingById(
+        return passengerRatingService.patchPassengerRatingById(
                 id,
-                PASSENGER_RATING_MAPPER.fromPassengerRatingPatchDtoToPassengerRating(passengerRatingPatchDto)));
+                PASSENGER_RATING_MAPPER.fromPassengerRatingPatchDtoToPassengerRating(passengerRatingPatchDto));
     }
 }
