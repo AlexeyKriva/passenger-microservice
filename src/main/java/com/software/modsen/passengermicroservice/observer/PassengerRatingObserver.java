@@ -15,16 +15,16 @@ public class PassengerRatingObserver implements PassengerObserver{
     private PassengerRatingRepository passengerRatingRepository;
 
     @Override
-    @Transactional
-    public void updatePassengerInfo(long passengerId) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
+    public void updatePassengerInfo(String passengerId) {
+        passengerRepository.findById(passengerId)
+                .flatMap(passenger -> {
+                    PassengerRating newPassengerRating = new PassengerRating();
+                    newPassengerRating.setPassengerId(passengerId);
+                    newPassengerRating.setRatingValue(0.0f);
+                    newPassengerRating.setNumberOfRatings(0);
 
-        PassengerRating newPassengerRating = new PassengerRating();
-
-        newPassengerRating.setPassenger(passengerFromDb.get());
-        newPassengerRating.setRatingValue(0.0f);
-        newPassengerRating.setNumberOfRatings(0);
-
-        passengerRatingRepository.save(newPassengerRating);
+                    return passengerRatingRepository.save(newPassengerRating);
+                })
+                .subscribe();
     }
 }

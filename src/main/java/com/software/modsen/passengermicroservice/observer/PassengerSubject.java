@@ -16,8 +16,7 @@ public class PassengerSubject {
         passengerObservers.remove(passengerObserver);
     }
 
-    @Transactional
-    public void notifyPassengerObservers(long passengerId) {
+    public void notifyPassengerObservers(String passengerId) {
         for (PassengerObserver passengerObserver: passengerObservers) {
             passengerObserver.updatePassengerInfo(passengerId);
         }

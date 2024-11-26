@@ -3,6 +3,7 @@ package com.software.modsen.passengermicroservice.observer;
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import com.software.modsen.passengermicroservice.entities.account.Currency;
 import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
+import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
 import com.software.modsen.passengermicroservice.repositories.PassengerAccountRepository;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import lombok.AllArgsConstructor;
@@ -16,16 +17,16 @@ public class PassengerAccountObserver implements PassengerObserver {
     private PassengerAccountRepository passengerAccountRepository;
 
     @Override
-    @Transactional
-    public void updatePassengerInfo(long passengerId) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(passengerId);
+    public void updatePassengerInfo(String passengerId) {
+        passengerRepository.findById(passengerId)
+                .flatMap(passenger -> {
+                    PassengerAccount newPassengerAccount = new PassengerAccount();
+                    newPassengerAccount.setPassengerId(passengerId);
+                    newPassengerAccount.setBalance(0.0f);
+                    newPassengerAccount.setCurrency(Currency.BYN);
 
-        PassengerAccount newPassengerAccount = new PassengerAccount();
-
-        newPassengerAccount.setPassenger(passengerFromDb.get());
-        newPassengerAccount.setBalance(0.0f);
-        newPassengerAccount.setCurrency(Currency.BYN);
-
-        passengerAccountRepository.save(newPassengerAccount);
+                    return passengerAccountRepository.save(newPassengerAccount);
+                })
+                .subscribe();
     }
 }
