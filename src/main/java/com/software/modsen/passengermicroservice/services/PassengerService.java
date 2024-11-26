@@ -9,12 +9,13 @@ import com.software.modsen.passengermicroservice.observer.PassengerSubject;
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
-import org.postgresql.util.PSQLException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,115 +29,92 @@ public class PassengerService {
     private PassengerRepository passengerRepository;
     private PassengerSubject passengerSubject;
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<Passenger> getAllPassengersOrPassengerByName(boolean includeDeleted, String name) {
+    public Flux<Passenger> getAllPassengersOrPassengerByName(boolean includeDeleted, String name) {
         if (name != null) {
-            return List.of(getPassengerByName(name));
+            return passengerRepository.findByName(name)
+                    .flux();
         } else if (includeDeleted) {
             return passengerRepository.findAll();
         } else {
-            return passengerRepository.findAll().stream()
-                    .filter(passenger -> !passenger.isDeleted())
-                    .collect(Collectors.toList());
+            return passengerRepository.findAll()
+                    .filter(passenger -> !passenger.isDeleted());
         }
     }
 
-    public Passenger getPassengerByName(String name) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findByName(name);
+    public Mono<Passenger> getPassengerByName(String name) {
+        Mono<Passenger> passengerFromDb = passengerRepository.findByName(name);
 
-        if (passengerFromDb.isPresent()) {
-            return passengerFromDb.get();
-        }
-
-        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
+        return passengerFromDb.switchIfEmpty(
+                Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
     }
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public Passenger getPassengerById(long id) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
+    public Mono<Passenger> getPassengerById(String id) {
+        Mono<Passenger> passengerFromDb = passengerRepository.findById(id);
 
-        if (passengerFromDb.isPresent()) {
-            return passengerFromDb.get();
-        }
-
-        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
+        return passengerFromDb.switchIfEmpty(
+                Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
     }
 
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
+    public Mono<Passenger> savePassenger(Passenger newPassenger) {
+        return passengerRepository.save(newPassenger)
+                .doOnSuccess(passenger -> passengerSubject.notifyPassengerObservers(passenger.getId()));
+    }
+
+    public Mono<Passenger> updatePassengerById(String id, Passenger updatingPassenger) {
+        return passengerRepository.findById(id)
+                .flatMap(passenger -> {
+                    if (passenger.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE));
+                    }
+
+                    updatingPassenger.setId(passenger.getId());
+                    return passengerRepository.save(updatingPassenger);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
+    }
+
+    public Mono<Passenger> patchPassengerById(String id, Passenger updatingPassenger) {
+        return passengerRepository.findById(id)
+                .flatMap(passenger -> {
+                    if (passenger.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE));
+                    }
+
+                    if (updatingPassenger.getName() == null) {
+                        updatingPassenger.setName(passenger.getName());
+                    }
+                    if (updatingPassenger.getEmail() == null) {
+                        updatingPassenger.setEmail(passenger.getEmail());
+                    }
+                    if (updatingPassenger.getPhoneNumber() == null) {
+                        updatingPassenger.setPhoneNumber(passenger.getPhoneNumber());
+                    }
+
+                    updatingPassenger.setDeleted(passenger.isDeleted());
+                    updatingPassenger.setId(passenger.getId());
+
+                    return passengerRepository.save(updatingPassenger);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
+    }
+
     @Transactional
-    public Passenger savePassenger(Passenger newPassenger) {
-        Passenger passengerFromDb = passengerRepository.save(newPassenger);
-        passengerSubject.notifyPassengerObservers(passengerFromDb.getId());
-
-        return passengerFromDb;
+    public Mono<Passenger> softDeletePassengerById(String id) {
+        return passengerRepository.findById(id)
+                .flatMap(passenger -> {
+                    passenger.setDeleted(true);
+                    return passengerRepository.save(passenger);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
     }
 
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public Passenger updatePassengerById(long id, Passenger updatingPassenger) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
-
-        if (passengerFromDb.isPresent()) {
-            if (!passengerFromDb.get().isDeleted()) {
-                updatingPassenger.setId(passengerFromDb.get().getId());
-
-                return passengerRepository.save(updatingPassenger);
-            }
-
-            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
-    }
-
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public Passenger patchPassengerById(long id, Passenger updatingPassenger) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
-
-        if (passengerFromDb.isPresent()) {
-            if (!passengerFromDb.get().isDeleted()) {
-                if (updatingPassenger.getName() == null) {
-                    updatingPassenger.setName(passengerFromDb.get().getName());
-                }
-                if (updatingPassenger.getEmail() == null) {
-                    updatingPassenger.setEmail(passengerFromDb.get().getEmail());
-                }
-                if (updatingPassenger.getPhoneNumber() == null) {
-                    updatingPassenger.setPhoneNumber(passengerFromDb.get().getPhoneNumber());
-                }
-                updatingPassenger.setDeleted(passengerFromDb.get().isDeleted());
-                updatingPassenger.setId(passengerFromDb.get().getId());
-
-                return passengerRepository.save(updatingPassenger);
-            }
-
-            throw new PassengerWasDeletedException(ErrorMessage.PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE);
-    }
-
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public Passenger softDeletePassengerById(long id) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
-
-        return passengerFromDb.map(passenger -> {
-            passenger.setDeleted(true);
-            return passengerRepository.save(passenger);
-        }).orElseThrow(() -> new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE));
-    }
-
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public Passenger softRecoveryPassengerById(long id) {
-        Optional<Passenger> passengerFromDb = passengerRepository.findById(id);
-
-        return passengerFromDb.map(passenger -> {
-            passenger.setDeleted(false);
-            return passengerRepository.save(passenger);
-        }).orElseThrow(() -> new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE));
+    public Mono<Passenger> softRecoveryPassengerById(String id) {
+        return passengerRepository.findById(id)
+                .flatMap(passenger -> {
+                    passenger.setDeleted(false);
+                    return passengerRepository.save(passenger);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(ErrorMessage.PASSENGER_NOT_FOUND_MESSAGE)));
     }
 
     @Recover

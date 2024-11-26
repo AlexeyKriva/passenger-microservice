@@ -7,12 +7,14 @@ import com.software.modsen.passengermicroservice.repositories.PassengerAccountRe
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
-import org.postgresql.util.PSQLException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.*;
 
@@ -26,95 +28,90 @@ public class PassengerAccountService {
     private PassengerAccountRepository passengerAccountRepository;
     private PassengerRepository passengerRepository;
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerAccount> getAllPassengerAccounts(boolean includeDeleted) {
+    public Flux<PassengerAccount> getAllPassengerAccounts(boolean includeDeleted) {
         if (includeDeleted) {
             return passengerAccountRepository.findAll();
         } else {
-            return passengerAccountRepository.findAll().stream()
-                    .filter(passengerAccount -> passengerRepository.existsByIdAndIsDeleted(
-                            passengerAccount.getPassenger().getId(), false))
-                    .collect(Collectors.toList());
+            return passengerAccountRepository.findAll()
+                    .flatMap(passengerAccount ->
+                            passengerRepository.existsByIdAndDeleted(passengerAccount.getPassengerId(),
+                                            false)
+                                    .filter(exists -> exists)
+                                    .flatMap(exists -> Mono.just(passengerAccount))
+                    );
         }
     }
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public PassengerAccount getPassengerAccountById(long id) {
-        Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findById(id);
-
-        if (passengerAccountFromDb.isPresent()) {
-            return passengerAccountFromDb.get();
-        }
-
-        throw new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE);
+    public Mono<PassengerAccount> getPassengerAccountById(String id) {
+        return passengerAccountRepository.findById(id)
+                .switchIfEmpty(Mono.error(new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE)));
     }
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public PassengerAccount getPassengerAccountByPassengerId(long passengerId) {
-        Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
-
-        if (passengerAccountFromDb.isPresent()) {
-            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
-                return passengerAccountFromDb.get();
-            }
-
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE);
+    public Mono<PassengerAccount> getPassengerAccountByPassengerId(String passengerId) {
+        return passengerAccountRepository.findByPassengerId(passengerId)
+                .flatMap(passengerAccount ->
+                        passengerRepository.findById(passengerId)
+                                .flatMap(passengerFromDb -> {
+                                    if (passengerFromDb.isDeleted()) {
+                                        return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                                    }
+                                    return Mono.just(passengerAccount);
+                                })
+                )
+                .switchIfEmpty(Mono.error(new PassengerAccountNotFoundException(PASSENGER_ACCOUNT_NOT_FOUND_MESSAGE)));
     }
 
-    @Transactional
-    public PassengerAccount increaseBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
-        Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
+    public Mono<PassengerAccount> increaseBalance(String passengerId, PassengerAccount updatingPassengerAccount) {
+        return passengerAccountRepository.findByPassengerId(passengerId)
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(passengerAccountFromDb -> {
+                    Passenger passengerFromDb = passengerRepository.findById(passengerId).block();
 
-        if (passengerAccountFromDb.isPresent()) {
-            updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
-            updatingPassengerAccount.setVersion(passengerAccountFromDb.get().getVersion());
+                    if (passengerFromDb.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                    }
 
-            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
-                updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
+                    updatingPassengerAccount.setId(passengerAccountFromDb.getId());
+                    updatingPassengerAccount.setVersion(passengerAccountFromDb.getVersion());
 
-                Float increasingBalance = updatingPassengerAccount.getBalance()
-                        + passengerAccountFromDb.get().getBalance();
-                updatingPassengerAccount.setBalance(increasingBalance);
+                    updatingPassengerAccount.setPassengerId(passengerFromDb.getId());
 
-                return passengerAccountRepository.save(updatingPassengerAccount);
-            }
-
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
-    }
-
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public PassengerAccount cancelBalance(long passengerId, PassengerAccount updatingPassengerAccount) {
-        Optional<PassengerAccount> passengerAccountFromDb = passengerAccountRepository.findByPassengerId(passengerId);
-
-        if (passengerAccountFromDb.isPresent()) {
-            updatingPassengerAccount.setId(passengerAccountFromDb.get().getId());
-            updatingPassengerAccount.setVersion(passengerAccountFromDb.get().getVersion());
-
-            if (!passengerAccountFromDb.get().getPassenger().isDeleted()) {
-                updatingPassengerAccount.setPassenger(passengerAccountFromDb.get().getPassenger());
-                float increasingBalance = passengerAccountFromDb.get().getBalance()
-                        - updatingPassengerAccount.getBalance();
-                if (increasingBalance >= 0) {
+                    Float increasingBalance = updatingPassengerAccount.getBalance() + passengerAccountFromDb.getBalance();
                     updatingPassengerAccount.setBalance(increasingBalance);
 
                     return passengerAccountRepository.save(updatingPassengerAccount);
-                } else {
-                    throw new InsufficientAccountBalanceException(INSUFFICIENT_ACCOUNT_BALANCE_EXCEPTION);
-                }
-            }
-
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE)));
     }
+
+    public Mono<PassengerAccount> cancelBalance(String passengerId, PassengerAccount updatingPassengerAccount) {
+        return passengerAccountRepository.findByPassengerId(passengerId)
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(passengerAccountFromDb -> {
+                    Mono<Passenger> passengerMono = passengerRepository.findById(passengerId);
+
+                    return passengerMono.flatMap(passengerFromDb -> {
+                        if (passengerFromDb.isDeleted()) {
+                            return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                        }
+
+                        // Обновляем поля учетной записи
+                        updatingPassengerAccount.setId(passengerAccountFromDb.getId());
+                        updatingPassengerAccount.setVersion(passengerAccountFromDb.getVersion());
+                        updatingPassengerAccount.setPassengerId(passengerFromDb.getId());
+
+                        float resultingBalance = passengerAccountFromDb.getBalance() - updatingPassengerAccount.getBalance();
+                        if (resultingBalance >= 0) {
+                            updatingPassengerAccount.setBalance(resultingBalance);
+                            return passengerAccountRepository.save(updatingPassengerAccount);
+                        } else {
+                            return Mono.error(new InsufficientAccountBalanceException(INSUFFICIENT_ACCOUNT_BALANCE_EXCEPTION));
+                        }
+                    });
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE)));
+    }
+
 
     @Recover
     public PassengerAccount fallbackPostgresHandle(Throwable throwable) {

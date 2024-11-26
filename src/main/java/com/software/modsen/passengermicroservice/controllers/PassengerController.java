@@ -12,6 +12,8 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -27,72 +29,70 @@ public class PassengerController {
     @Operation(
             description = "Allows to get all passengers."
     )
-    public ResponseEntity<List<Passenger>> getAllPassengersOrPassengerById(@RequestParam(name = "includeDeleted",
+    public Flux<Passenger> getAllPassengersOrPassengerById(@RequestParam(name = "includeDeleted",
             required = false, defaultValue = "true") boolean includeDeleted, @RequestParam(name = "name",
             required = false) String name) {
-        return ResponseEntity.ok(passengerService.getAllPassengersOrPassengerByName(includeDeleted, name));
+        return passengerService.getAllPassengersOrPassengerByName(includeDeleted, name);
     }
 
     @GetMapping("/{id}")
     @Operation(
             description = "Allows to get not deleted passenger by id."
     )
-    public ResponseEntity<Passenger> getPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
-                                                      long id) {
-        return ResponseEntity.ok(passengerService.getPassengerById(id));
+    public Mono<Passenger> getPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
+                                                      String id) {
+        return passengerService.getPassengerById(id);
     }
 
     @PostMapping
     @Operation(
             description = "Allows to save new passenger."
     )
-    public ResponseEntity<Passenger> savePassenger(@Valid
+    public Mono<Passenger> savePassenger(@Valid
                                                    @RequestBody @Parameter(description = "Passenger entity.")
                                                        PassengerDto passengerDto) {
-        return ResponseEntity.ok(passengerService.savePassenger(
-                PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto)));
+        return passengerService.savePassenger(PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto));
     }
 
     @PutMapping("/{id}")
     @Operation(
             description = "Allows to update all passenger fields."
     )
-    public ResponseEntity<Passenger> updatePassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
-                                                         long id,
+    public Mono<Passenger> updatePassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
+                                                         String id,
                                                      @Valid @RequestBody @Parameter(description = "Entity passenger.")
                                                      PassengerDto passengerDto) {
-        return ResponseEntity.ok(passengerService.updatePassengerById(id,
-                PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto)));
+        return passengerService.updatePassengerById(id, PASSENGER_MAPPER.fromPassengerDtoToPassenger(passengerDto));
     }
 
     @PatchMapping("/{id}")
     @Operation(
             description = "Allows you to selectively update passenger fields."
     )
-    public ResponseEntity<Passenger> patchPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
-                                                        long id,
+    public Mono<Passenger> patchPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
+                                                        String id,
                                                     @Valid
                                                     @RequestBody @Parameter(description = "Entity passenger.")
                                                     PassengerPatchDto passengerPatchDto) {
-        return ResponseEntity.ok(passengerService.patchPassengerById(id,
-                PASSENGER_MAPPER.fromPassengerPatchDtoToPassengerRating(passengerPatchDto)));
+        return passengerService.patchPassengerById(id,
+                PASSENGER_MAPPER.fromPassengerPatchDtoToPassengerRating(passengerPatchDto));
     }
 
     @DeleteMapping("/{id}")
     @Operation(
             description = "Allows you to soft delete passenger by id."
     )
-    public ResponseEntity<Passenger> softDeletePassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
-                                                             long id) {
-        return ResponseEntity.ok(passengerService.softDeletePassengerById(id));
+    public Mono<Passenger> softDeletePassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
+                                                             String id) {
+        return passengerService.softDeletePassengerById(id);
     }
 
     @PostMapping("/{id}/restore")
     @Operation(
             description = "Allows you to soft recovery passenger by id."
     )
-    public ResponseEntity<Passenger> softRecoveryPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
-                                                               long id) {
-        return ResponseEntity.ok(passengerService.softRecoveryPassengerById(id));
+    public Mono<Passenger> softRecoveryPassenger(@PathVariable("id") @Parameter(description = "Passenger id.")
+                                                               String id) {
+        return passengerService.softRecoveryPassengerById(id);
     }
 }

@@ -1,7 +1,6 @@
 package com.software.modsen.passengermicroservice.services;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
-import com.software.modsen.passengermicroservice.entities.account.PassengerAccount;
 import com.software.modsen.passengermicroservice.entities.rating.PassengerRating;
 import com.software.modsen.passengermicroservice.exceptions.DatabaseConnectionRefusedException;
 import com.software.modsen.passengermicroservice.exceptions.PassengerNotFoundException;
@@ -11,16 +10,20 @@ import com.software.modsen.passengermicroservice.repositories.PassengerRatingRep
 import com.software.modsen.passengermicroservice.repositories.PassengerRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.AllArgsConstructor;
-import org.postgresql.util.PSQLException;
-import org.springframework.dao.DataAccessException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.software.modsen.passengermicroservice.exceptions.ErrorMessage.*;
@@ -31,104 +34,86 @@ public class PassengerRatingService {
     private PassengerRatingRepository passengerRatingRepository;
     private PassengerRepository passengerRepository;
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public List<PassengerRating> getAllPassengerRatings(boolean includeDeleted) {
+    public Flux<PassengerRating> getAllPassengerRatings(boolean includeDeleted) {
         if (includeDeleted) {
             return passengerRatingRepository.findAll();
         } else {
-            List<PassengerRating> passengerRatingsFromDb = passengerRatingRepository.findAll();
-            List<PassengerRating> passengerRatingsAndNotDeleted = new ArrayList<>();
-
-            for (PassengerRating passengerRatingFromDb : passengerRatingsFromDb) {
-                Optional<Passenger> passengerFromDb = passengerRepository
-                        .findPassengerByIdAndIsDeleted(passengerRatingFromDb.getPassenger().getId(), false);
-
-                if (passengerFromDb.isPresent()) {
-                    passengerRatingsAndNotDeleted.add(passengerRatingFromDb);
-                }
-            }
-
-            if (passengerRatingsAndNotDeleted.isEmpty()) {
-                throw new PassengerNotFoundException(PASSENGER_NOT_FOUND_MESSAGE);
-            }
-
-            return passengerRatingsAndNotDeleted;
+            return passengerRatingRepository.findAll()
+                    .flatMap(passengerAccount ->
+                            passengerRepository.existsByIdAndDeleted(passengerAccount.getPassengerId(),
+                                            false)
+                                    .filter(exists -> exists)
+                                    .flatMap(exists -> Mono.just(passengerAccount))
+                    );
         }
     }
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public PassengerRating getPassengerRatingById(long id) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
-
-        if (passengerRatingFromDb.isPresent()) {
-            return passengerRatingFromDb.get();
-        }
-
-        throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
+    public Mono<PassengerRating> getPassengerRatingById(String id) {
+        return passengerRatingRepository.findById(id)
+                .switchIfEmpty(Mono.error(new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE)));
     }
 
-    @Retryable(retryFor = {PSQLException.class}, maxAttempts = 5, backoff = @Backoff(delay = 500))
-    public PassengerRating getPassengerRatingByPassengerId(long passengerId) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findByPassengerId(passengerId);
+    public Mono<PassengerRating> getPassengerRatingByPassengerId(String passengerId) {
+        return passengerRatingRepository.findByPassengerId(passengerId)
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(passengerRatingFromDb -> {
+                    Passenger passengerFromDb = passengerRepository.findById(passengerId).block();
 
-        if (passengerRatingFromDb.isPresent()) {
-            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
-                return passengerRatingFromDb.get();
-            }
+                    if (passengerFromDb.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                    }
 
-            throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-        }
-
-        throw new PassengerNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
+                    return Mono.just(passengerRatingFromDb);
+                })
+                .switchIfEmpty(Mono.error(new PassengerNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE)));
     }
 
     @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
     @Transactional
-    public PassengerRating putPassengerRatingById(long id, PassengerRating updatingPassengerRating) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+    public Mono<PassengerRating> putPassengerRatingById(String id, PassengerRating updatingPassengerRating) {
+        return passengerRatingRepository.findById(id)
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(passengerRatingFromDb -> {
+                    Passenger passengerFromDb = passengerRepository.findById(passengerRatingFromDb.getPassengerId())
+                            .block();
 
-        if (passengerRatingFromDb.isPresent()) {
-            updatingPassengerRating.setId(id);
+                    if (passengerFromDb.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                    }
 
-            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
-                updatingPassengerRating.setPassenger(passengerRatingFromDb.get().getPassenger());
-            } else {
-                throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-            }
-
-            return passengerRatingRepository.save(updatingPassengerRating);
-        }
-
-        throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
+                    updatingPassengerRating.setId(id);
+                    updatingPassengerRating.setPassengerId(passengerFromDb.getId());
+                    return passengerRatingRepository.save(updatingPassengerRating);
+                })
+                .switchIfEmpty(Mono.error(new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE)));
     }
 
-    @CircuitBreaker(name = "simpleCircuitBreaker", fallbackMethod = "fallbackPostgresHandle")
-    @Transactional
-    public PassengerRating patchPassengerRatingById(long id,
+    public Mono<PassengerRating> patchPassengerRatingById(String id,
                                                     PassengerRating updatingPassengerRating) {
-        Optional<PassengerRating> passengerRatingFromDb = passengerRatingRepository.findById(id);
+        return passengerRatingRepository.findById(id)
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(passengerRatingFromDb -> {
+                    Passenger passengerFromDb = passengerRepository.findById(passengerRatingFromDb.getPassengerId())
+                            .block();
 
-        if (passengerRatingFromDb.isPresent()) {
-            if (!passengerRatingFromDb.get().getPassenger().isDeleted()) {
-                updatingPassengerRating.setPassenger(passengerRatingFromDb.get().getPassenger());
-            } else {
-                throw new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE);
-            }
+                    if (passengerFromDb.isDeleted()) {
+                        return Mono.error(new PassengerWasDeletedException(PASSENGER_WAS_DELETED_MESSAGE));
+                    }
 
-            if (updatingPassengerRating.getRatingValue() == null) {
-                updatingPassengerRating.setRatingValue(passengerRatingFromDb.get().getRatingValue());
-            }
+                    if (updatingPassengerRating.getRatingValue() == null) {
+                        updatingPassengerRating.setRatingValue(passengerRatingFromDb.getRatingValue());
+                    }
 
-            if (updatingPassengerRating.getNumberOfRatings() == null) {
-                updatingPassengerRating.setNumberOfRatings(passengerRatingFromDb.get().getNumberOfRatings());
-            }
+                    if (updatingPassengerRating.getNumberOfRatings() == null) {
+                        updatingPassengerRating.setNumberOfRatings(passengerRatingFromDb.getNumberOfRatings());
+                    }
 
-            updatingPassengerRating.setId(id);
+                    updatingPassengerRating.setPassengerId(passengerFromDb.getId());
+                    updatingPassengerRating.setId(id);
 
-            return passengerRatingRepository.save(updatingPassengerRating);
-        }
-
-        throw new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE);
+                    return passengerRatingRepository.save(updatingPassengerRating);
+                })
+                .switchIfEmpty(Mono.error(new PassengerRatingNotFoundException(PASSENGER_RATING_NOT_FOUND_MESSAGE)));
     }
 
     @Recover

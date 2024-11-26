@@ -2,35 +2,29 @@ package com.software.modsen.passengermicroservice.entities.account;
 
 import com.software.modsen.passengermicroservice.entities.Passenger;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-@Entity
-@Table(name = "passenger_account")
+@Document(collection = "accounts")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "Passenger account entity.")
-@OptimisticLocking(type = OptimisticLockType.VERSION)
 public class PassengerAccount {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
-    private long id;
+    private String id;
 
-    @OneToOne
-    @JoinColumn(name = "passenger_id", nullable = false)
-    private Passenger passenger;
+    private String passengerId;
 
-    @Column(name = "balance", nullable = false)
     private Float balance;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "currency", nullable = false)
     private Currency currency;
 
     @Version
