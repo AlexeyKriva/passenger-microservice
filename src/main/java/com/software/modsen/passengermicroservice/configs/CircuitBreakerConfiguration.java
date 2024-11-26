@@ -6,7 +6,6 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Duration;
